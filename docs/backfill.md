@@ -18,11 +18,10 @@
 
 - Run Backfill for specific month using CLI
 ```bash
-$env:PROJECT="seer-digital-ads"
-$env:COMPANY="kids"
-$env:DEPARTMENT="marketing"
-$env:ACCOUNT="main"
-$env:MODE="thismonth"
+$env:PROJECT="your-gcp-project"
+$env:COMPANY="your-company-in-short"
+$env:DEPARTMENT="your-department"
+$env:ACCOUNT="your-account"
 
 python backfill.py --input_month 2025-01
 ```
