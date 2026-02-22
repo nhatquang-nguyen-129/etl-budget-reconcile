@@ -88,7 +88,7 @@ gcloud auth application-default login `
 
 - Grant **BigQuery Data Editor** and **BigQuery Job User** for required IAM Roles
 
---
+---
 
 ### Share Google Sheets access
 
