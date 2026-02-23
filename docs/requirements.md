@@ -2,9 +2,7 @@
 
 ## Purpose
 
-- Installing or running Python libraries with an unsupported Python version may cause pip install errors
-
-- Installing or running Python libraries with an unsupported Python version may cause silent incompatibilities
+- Installing or running Python libraries with an unsupported Python version may cause pip install errors or silent incompatibilities
 
 ---
 
