@@ -38,3 +38,14 @@
 - This runtime is technically possible for local execution but not recommended
 
 - For manual historical reprocessing, use the `Backfill` module instead
+
+- Run DAGs for specific `MODE` using CLI
+``bash
+$env:PROJECT="your-gcp-project"
+$env:COMPANY="your-company-in-short"
+$env:DEPARTMENT="your-department"
+$env:ACCOUNT="your-account"
+$env:MODE="your-time-window"
+
+python main.py
+```
