@@ -1,4 +1,4 @@
-### DAGs for Budget Reconciliation
+# DAGs for Budget Reconciliation
 
 ## Purpose
 
