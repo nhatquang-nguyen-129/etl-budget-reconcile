@@ -14,9 +14,9 @@
 
 ### Activate Python venv
 
-- Create Python virtual environment if `venv\` folder not exists
+- Create Python virtual environment with Python 3.13 interpreter if `venv\` folder not exists
 ```bash
-python -m venv venv
+& "C:\Users\ADMIN\AppData\Local\Programs\Python\Python313\python.exe" -m venv venv
 ```
 
 - Activate Python virtual environment and check `(venv)` in the terminal
