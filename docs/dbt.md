@@ -1,11 +1,11 @@
-# Data Build Tool for Facebook Ads SQL Materialization
+# Data Build Tool for Budget Reconcilication
 
 ## Purpose
 
-- Use **dbt** to build Facebook analytics-ready **materialized tables** in **Google BigQuery**
+- Use **dbt** to build Budget analytics-ready **materialized tables** in **Google BigQuery**
 - Used **dbt** only for **SQL transformations** and all ELT processes are handled upstream
-- Join Facebook Ads campaign insights fact tables with campaign metadata dim table
-- Join Facebook Ads ad insights fact tables with campaign metadata/adset metadata/ad metadata/ad creative dim tables
+- Join Budget Reconciliation with multiple facts table separated by month
+- Join Budget Reconciliation materialized table with advertising spend
 - Define final analytical grain and manage model dependencies using `ref()`
 
 ---
@@ -50,7 +50,7 @@ dbt --version
 ```bash
 {{ config(
     materialized='ephemeral',
-    tags=['stg', 'facebook', 'campaign']
+    tags=['stg', 'budget', 'campaign']
 ) }}
 ```
 
@@ -58,7 +58,7 @@ dbt --version
 ```bash
 {{ config(
     materialized='ephemeral',
-    tags=['int', 'facebook', 'campaign']
+    tags=['int', 'budget', 'campaign']
 ) }}
 ```
 
@@ -66,7 +66,7 @@ dbt --version
 ```bash
 {{ config(
     materialized='table',
-    tags=['mart', 'facebook', 'campaign']
+    tags=['mart', 'budget', 'campaign']
 ) }}
 ```
 
@@ -94,20 +94,7 @@ dbt compile
 dbt build
 ```
 
-- Run only campaign insights
-```bash
-$env:PROJECT="seer-digital-ads"
-$env:COMPANY="kids"
-$env:DEPARTMENT="marketing"
-$env:ACCOUNT="main"
-
-dbt build `
-  --project-dir dbt `
-  --profiles-dir dbt `
-  --select tag:mart,tag:recon
-```
-
-- Run only ad insights
+- Run only budget reconciliation
 ```bash
 $env:PROJECT="your-gcp-project"
 $env:COMPANY="your-company-in-short"
@@ -117,15 +104,15 @@ $env:ACCOUNT="your-account"
 dbt build `
   --project-dir dbt `
   --profiles-dir dbt `
-  --select tag:ad
+  --select tag:mart,tag:recon
 ```
 
 ### Deployment with DAGs
 
 - Using Python `subprocess` to call dbt for each stream
 ```bash
-dbt_facebook_ads(
+dbt_budget_reconcilie(
     google_cloud_project=PROJECT,
-    select="campaign",
+    select="tag:mart,tag:recon",
 )
 ```
