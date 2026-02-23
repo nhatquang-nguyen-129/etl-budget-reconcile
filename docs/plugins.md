@@ -65,7 +65,7 @@
 
 - After dynamically inferring the schema, the loader create new table with `_create_new_table()` if the table does not exist
 
-### Handle conflict logic (INSERT / UPSERT)
+### Handle conflict logic
 
 - The loader controls conflict behavior using the mode parameter `INSERT` or `UPSERT`
 
@@ -77,14 +77,14 @@
 
 - With `UPSERT` mode, the loader validates that all keys are present before execution 
 
-- With `UPSERT` mode, the loader removes existing records in Google BigQuery table that match the provided keys.
+- With `UPSERT` mode, the loader removes existing records in Google BigQuery table that match the provided keys
 
 - With `UPSERT` mode, the loader executes a parameterized `DELETE` query using `UNNEST(@values)` if only one key is provided
 
 - With `UPSERT` mode, the loader executes a `DELETE` statement using an `EXISTS` join condition with a temporary table containing distinct key combinations
 
-### Write data using WRITE_APPEND
+### Write DataFrame to Google BigQuery
 
-- The loader calls `load_table_from_dataframe()` to upload the DataFrame into Google BigQuery.
+- The loader calls `load_table_from_dataframe()` with `WRITE_APPEND` composition to upload into Google BigQuery
 
 - the loader raises a runtime error immediately if the write operation fails
