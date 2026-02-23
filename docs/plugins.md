@@ -87,4 +87,4 @@
 
 - The loader calls `load_table_from_dataframe()` with `WRITE_APPEND` composition to upload into Google BigQuery
 
-- the loader raises a runtime error immediately if the write operation fails
+- The loader raises a runtime error immediately if the write operation fails
