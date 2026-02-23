@@ -36,4 +36,20 @@
 
 - The transformer normalizes numeric columns by rouding and converting to `nullable INT64`
 
-- The transformer computes
+- The transformer normalizes year from `YYYY-MM` month format by trimming white space
+
+- The transformer normalizes date type by localizing to `Asia/Ho_Chi_Minh`
+
+- The transformer computes `actual_budget` from `initial_budget`, `adjusted_budget` and `additional_budget`
+
+- The transformer computes various grouped budget columns based on `budget_group`
+
+- The transformer calculates `total_effective_time` which is the difference between `start_date` and `end_date`
+
+- The transformer calculates `total_passed_time` which is the difference between current date and `start_date`
+
+## Load
+
+- The loader uses `mode="upsert"` and `keys=["month"]` to delete existing records with matching month
+
+- The loader applies table clustering on `cluster=["month"]` to improve query performance
