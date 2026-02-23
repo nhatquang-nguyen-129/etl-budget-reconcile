@@ -37,13 +37,14 @@ def transform_budget_allocation(
             return df
         
         required_cols = {
-            "budget_group_1",
-            "budget_group_2",
-            "region",
+            "budget_group",
             "category_level_1",
-            "track_group",
-            "pillar_group",
-            "content_group",
+            "region",
+            "details",
+            "track",
+            "group",
+            "content",
+            "year",
             "month",
             "start_date",
             "end_date",
@@ -82,37 +83,43 @@ def transform_budget_allocation(
         ).astype("Int64")
 
         df["grouped_marketing_budget"] = (
-            (df["budget_group_1"] == "KP").astype("Int64")
+            (df["budget_group"] == "KIDS").astype("Int64")
         ) * df["actual_budget"]
 
         df["grouped_supplier_budget"] = (
-            (df["budget_group_1"] == "NC").astype("Int64")
+            (df["budget_group"] == "SUP").astype("Int64")
         ) * df["actual_budget"]
 
         df["grouped_store_budget"] = (
-            (df["budget_group_1"] == "KD").astype("Int64")
+            (df["budget_group"] == "STORE").astype("Int64")
+        ) * df["actual_budget"]
+
+        df["grouped_ecommerce_budget"] = (
+            (df["budget_group"] == "ECOM").astype("Int64")
+        ) * df["actual_budget"]        
+
+        df["grouped_recruitment_budget"] = (
+            (df["budget_group"] == "HR").astype("Int64")
         ) * df["actual_budget"]
 
         df["grouped_customer_budget"] = (
-            (df["budget_group_1"] == "CS").astype("Int64")
+            (df["budget_group"] == "CS").astype("Int64")
         ) * df["actual_budget"]
 
-        df["grouped_recruitment_budget"] = (
-            (df["budget_group_1"] == "HC").astype("Int64")
+        df["grouped_festival_budget"] = (
+            (df["budget_group"] == "FES").astype("Int64")
         ) * df["actual_budget"]
 
         # Transform time columns
-        df["month"] = df["month"].astype(str).str.strip()
+        df["month"] = (
+            df["month"]
+            .astype(str)
+            .str.strip()
+        )
 
         df["year"] = (
-            pd.to_datetime(
-            df["month"] + "-01",
-            errors="coerce"
-            )
-        .dt
-        .year
-        .fillna(0)
-        .astype("Int64")
+            pd.to_numeric(df["year"], errors="coerce")
+            .astype("Int64")
         )
 
         df["start_date"] = pd.to_datetime(
