@@ -50,6 +50,6 @@
 
 ## Load
 
-- The loader uses `mode="upsert"` and `keys=["month"]` to delete existing records with matching month
+- The loader uses `mode="upsert"` and `keys=["month"]` to delete existing records
 
 - The loader applies table clustering on `cluster=["month"]` to improve query performance
