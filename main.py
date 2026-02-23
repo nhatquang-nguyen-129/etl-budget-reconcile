@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 from google.cloud import secretmanager
 from google.api_core.client_options import ClientOptions
 
-from dags.dags_budget_reconciliation import dags_budget_reconciliation
+from dags.dags_budget_reconcile import dags_budget_reconciliation
 
 COMPANY    = os.getenv("COMPANY")
 PROJECT    = os.getenv("PROJECT")
