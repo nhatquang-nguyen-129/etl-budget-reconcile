@@ -40,7 +40,7 @@
 - For manual historical reprocessing, use the `Backfill` module instead
 
 - Run DAGs for specific `MODE` using CLI
-``bash
+```bash
 $env:PROJECT="your-gcp-project"
 $env:COMPANY="your-company-in-short"
 $env:DEPARTMENT="your-department"
