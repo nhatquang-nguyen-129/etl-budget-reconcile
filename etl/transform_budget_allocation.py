@@ -44,7 +44,6 @@ def transform_budget_allocation(
             "track",
             "group",
             "content",
-            "year",
             "month",
             "start_date",
             "end_date",
@@ -111,15 +110,17 @@ def transform_budget_allocation(
         ) * df["actual_budget"]
 
         # Transform time columns
-        df["month"] = (
-            df["month"]
-            .astype(str)
-            .str.strip()
-        )
+        df["month"] = df["month"].astype(str).str.strip()
 
         df["year"] = (
-            pd.to_numeric(df["year"], errors="coerce")
-            .astype("Int64")
+            pd.to_datetime(
+            df["month"] + "-01",
+            errors="coerce"
+            )
+        .dt
+        .year
+        .fillna(0)
+        .astype("Int64")
         )
 
         df["start_date"] = pd.to_datetime(
