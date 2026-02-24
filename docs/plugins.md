@@ -59,7 +59,7 @@
 
 - The loader automatically maps pandas dtype `datetime` to Google BigQuery type `TIMESTAMP`
 
-- The loader automatically maps pandas dtype `others` to Google BigQuery type `TIMESTAMP`
+- The loader automatically maps pandas dtype `others` to Google BigQuery type `STRING`
 
 - The loader fully supports time partitioning with `PARTITION BY DAY(date)` and clusterting
 
