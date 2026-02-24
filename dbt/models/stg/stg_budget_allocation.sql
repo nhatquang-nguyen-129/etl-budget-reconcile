@@ -13,6 +13,7 @@
 
 {% if execute %}
 
+
     {% set tables_query %}
         select table_name
         from `{{ target.project }}.{{ raw_schema }}.INFORMATION_SCHEMA.TABLES`
@@ -30,14 +31,13 @@
 {% if table_names | length == 0 %}
 
 select
-    cast(null as string)  as budget_group_1,
-    cast(null as string)  as budget_group_2,
+    cast(null as string)  as budget_group,
     cast(null as string)  as region,
 
     cast(null as string)  as category_level_1,
-    cast(null as string)  as track_group,
-    cast(null as string)  as pillar_group,
-    cast(null as string)  as content_group,
+    cast(null as string)  as track,
+    cast(null as string)  as group,
+    cast(null as string)  as content,
 
     cast(null as string)  as month,
     cast(null as int64)   as year,
@@ -56,8 +56,10 @@ select
     cast(null as numeric) as grouped_marketing_budget,
     cast(null as numeric) as grouped_supplier_budget,
     cast(null as numeric) as grouped_store_budget,
-    cast(null as numeric) as grouped_customer_budget,
+    cast(null as numeric) as grouped_ecommerce_budget,
     cast(null as numeric) as grouped_recruitment_budget,
+    cast(null as numeric) as grouped_customer_budget,
+    cast(null as numeric) as grouped_festival_budget,
 
     cast(null as int64)   as total_effective_time,
     cast(null as int64)   as total_passed_time
@@ -68,14 +70,13 @@ from unnest([]) as _
 {% for table_name in table_names %}
 
 select
-    budget_group_1,
-    budget_group_2,
+    budget_group,
     region,
 
     category_level_1,
-    track_group,
-    pillar_group,
-    content_group,
+    track,
+    group,
+    content,
 
     month,
     year,
@@ -94,8 +95,10 @@ select
     grouped_marketing_budget,
     grouped_supplier_budget,
     grouped_store_budget,
-    grouped_customer_budget,
+    grouped_ecommerce_budget,
     grouped_recruitment_budget,
+    grouped_customer_budget,
+    grouped_festival_budget,
 
     total_effective_time,
     total_passed_time
