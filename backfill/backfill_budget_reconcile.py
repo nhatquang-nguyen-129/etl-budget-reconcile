@@ -47,7 +47,7 @@ def backfill():
     parser.add_argument(
         "--input_month",
         required=True,
-        help="Input month in YYYY-MM format (e.g., 2025-01)"
+        help="Input month in YYYY-MM format"
     )
 
     args = parser.parse_args()
