@@ -45,9 +45,9 @@ select
 
     cast(null as string)  as objective,
     cast(null as string)  as month,
-    cast(null as int64)  as year,
+    cast(null as int64)   as year,
 
-    cast(null as int64) as spend,
+    cast(null as int64)   as spend,
     cast(null as string)  as objective_status
 from unnest([]) as _
 
