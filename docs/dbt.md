@@ -2,10 +2,14 @@
 
 ## Purpose
 
-- Use **dbt** to build Budget analytics-ready **materialized tables** in **Google BigQuery**
-- Used **dbt** only for **SQL transformations** and all ELT processes are handled upstream
-- Join Budget Reconciliation with multiple facts table separated by month
+- Use **dbt** adapter to build Budget analytics-ready materialized tables in **Google BigQuery**
+
+- Used **dbt** only for SQL transformations and all ELT processes are handled upstream
+
+- Join Budget Reconciliation with multiple facts table separated by **month**
+
 - Join Budget Reconciliation materialized table with advertising spend
+
 - Define final analytical grain and manage model dependencies using `ref()`
 
 ---
@@ -62,7 +66,7 @@ dbt --version
 ) }}
 ```
 
-- `models/mart` is the final materialization layer and materialized as `table` with example:
+- `models/mart` is the final materialization layer and materialized as physical `table` with example:
 ```bash
 {{ config(
     materialized='table',
@@ -104,7 +108,7 @@ $env:ACCOUNT="your-account"
 dbt build `
   --project-dir dbt `
   --profiles-dir dbt `
-  --select tag:mart,tag:recon
+  --select tag:mart
 ```
 
 ### Deployment with DAGs
@@ -113,6 +117,6 @@ dbt build `
 ```bash
 dbt_budget_reconcilie(
     google_cloud_project=PROJECT,
-    select="tag:mart,tag:recon",
+    select="tag:mart",
 )
 ```
