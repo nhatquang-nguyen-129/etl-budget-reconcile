@@ -13,7 +13,7 @@ def load_budget_allocation(
     direction: str,
 ) -> None:
     """
-    Load Budget Allocation
+    Load Budget Allocation to Google BigQuery
     ----------------------
     Workflow:
         1. Validate input DataFrame
