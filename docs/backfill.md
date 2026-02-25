@@ -23,5 +23,5 @@ $env:COMPANY="your-company-in-short"
 $env:DEPARTMENT="your-department"
 $env:ACCOUNT="your-account"
 
-python backfill.py --input_month 2025-01
+python backfill.py --input_month YYYY-MM
 ```
