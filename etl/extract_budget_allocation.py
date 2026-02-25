@@ -3,10 +3,9 @@ from pathlib import Path
 ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
-import time
-import requests
-
 import pandas as pd
+
+import requests
 
 from google.auth import default
 from google.auth.exceptions import RefreshError
@@ -33,10 +32,10 @@ def extract_budget_allocation(
             Flattened budget allocation records
     """
 
+    # Initialize gspread client
     scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
     creds, _ = default(scopes=scopes)
 
-    # Initialize gspread client
     try:
         print(
             "🔍 [EXTRACT] Initializing Google Gspread client with scopes "
@@ -58,7 +57,7 @@ def extract_budget_allocation(
         error.retryable = False
         raise error from e   
 
-    # Make Gspread API call for budget allocation
+    # Make gspread API call for budget allocation
     try:
         print(
             "🔍 [EXTRACT] Extracting Budget Allocation in worksheet_name "
