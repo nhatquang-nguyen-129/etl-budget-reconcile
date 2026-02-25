@@ -38,7 +38,7 @@
 
 - The transformer normalizes year from `YYYY-MM` month format by trimming white space
 
-- The transformer normalizes date type by localizing to `Asia/Ho_Chi_Minh`
+- The transformer normalizes date type by localizing to `Asia/Ho_Chi_Minh` timezone
 
 - The transformer computes `actual_budget` from `initial_budget`, `adjusted_budget` and `additional_budget`
 
