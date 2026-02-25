@@ -96,6 +96,6 @@ gcloud auth application-default login `
 
 - Click Share button on the top right
 
-- Add Service Account email `pipeline-recon-ads@YOUR_PROJECT_ID.iam.gserviceaccount.com`
+- Add Service Account email `etl-budget-reconcile@YOUR_GCP_PROJECT_ID.iam.gserviceaccount.com`
 
 - Grant `Viewer` if read-only or `Editor` permission if writing back reconciliation results
