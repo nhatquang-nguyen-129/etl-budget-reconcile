@@ -12,7 +12,7 @@ from google.cloud import bigquery
 class internalGoogleBigqueryLoader:
     """
     Internal Google BigQuery Loader
-    ---------
+    ---
     Principles:
         1. Initialize BigQuery client
         2. Check dataset existence
@@ -21,7 +21,7 @@ class internalGoogleBigqueryLoader:
         5. Create table if not exist
         6. Apply INSERT/UPSERT DML
         7. Write data into table
-    ---------
+    ---
     Returns:
         None
     """
