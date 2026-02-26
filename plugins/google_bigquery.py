@@ -13,7 +13,7 @@ class internalGoogleBigqueryLoader:
     """
     Internal Google BigQuery Loader
     ---------
-    Workflow:
+    Principles:
         1. Initialize BigQuery client
         2. Check dataset existence
         3. Create dataset if not exist
