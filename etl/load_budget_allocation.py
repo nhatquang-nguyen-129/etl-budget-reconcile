@@ -15,7 +15,7 @@ def load_budget_allocation(
     """
     Load Budget Allocation to Google BigQuery
     ----------------------
-    Workflow:
+    Principles:
         1. Validate input DataFrame
         2. Validate output direction for Google BigQuery
         3. Set primary key(s) to month
