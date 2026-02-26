@@ -13,7 +13,7 @@ def transform_budget_allocation(
     """
     Transform Budget Allocation
     ---------
-    Workflow:
+    Principles:
         1. Validate input
         2. Enrich budget columns
         3. Normalize date columns
