@@ -14,7 +14,7 @@ def dbt_budget_reconcile(
     """
     Run dbt for Budget Reconciliation
     ---------
-    Workflow:
+    Principles:
         1. Initialize dbt execution environment
         2. Initialize Python subprocess to execute CLI
         3. Execute dbt build command with environment variables
