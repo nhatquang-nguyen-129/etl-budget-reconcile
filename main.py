@@ -30,13 +30,14 @@ if not all([
 def main():
     """
     Main Budget Reconciliation entrypoint
-    ---------
+    ---
     Workflow:
         1. Resolve execution time window from MODE
         2. Validate OS environment variables
         3. Load secrets from GCP Secret Manager
         4. Resolve worksheet_name and spreadsheet_id
         5. Dispatch execution to DAG orchestrator
+    ---
     Return:
         None
     """
