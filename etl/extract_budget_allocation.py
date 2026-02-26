@@ -18,14 +18,14 @@ def extract_budget_allocation(
 ) -> pd.DataFrame:
     """
     Extract Budget Allocation from Google Spreadsheets
-    ---------
+    ---
     Principles:
         1. Validate input worksheet_name
         2. Validate input spreadsheet_id
         3. Make API call for spreadsheets.readonly scope
         4. Append extract tabular data
         5. Enforce to DataFrame
-    ---------
+    ---
     Returns:
         1. DataFrame:
             Flattened budget allocation records
