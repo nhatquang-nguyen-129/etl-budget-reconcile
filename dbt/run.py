@@ -13,14 +13,14 @@ def dbt_budget_reconcile(
 ):
     """
     Run dbt for Budget Reconciliation
-    ---------
+    ---
     Principles:
         1. Initialize dbt execution environment
         2. Initialize Python subprocess to execute CLI
         3. Execute dbt build command with environment variables
         4. Execute dbt build command for dbt models stg/int/mart
-        3. Capture dbt execution status with stdout and stderr
-    ---------
+        5. Capture dbt execution status with stdout and stderr
+    ---
     Returns:
         None
     """
