@@ -12,14 +12,14 @@ def transform_budget_allocation(
 ) -> pd.DataFrame:
     """
     Transform Budget Allocation
-    ---------
+    ---
     Principles:
         1. Validate input
         2. Enrich budget columns
         3. Normalize date columns
         4. Calculate time range columns
         5. Enforce schema
-    ---------
+    ---
     Returns:
         1. DataFrame:
             Enforced budget allocation records
