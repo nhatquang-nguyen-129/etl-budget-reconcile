@@ -23,6 +23,20 @@ def dags_budget_reconcile(
     worksheet_name: str,
     spreadsheet_id: str,
 ):
+    """
+    DAG Orchestration for Budget Reconciliation
+    ---
+    Principles:
+        1. Trigger Budget Allocation extraction from Google Spreadsheets
+        2. Transform budget data into validated schema
+        3. Load transformed records into Google BigQuery
+        4. Execute dbt models for materialization
+        5. Execute dbt models of reconciliation
+    ---
+    Returns:
+        1. None:
+    """
+
     print(
         "🔄 [DAGS] Trigger to update Budget Reconciliation with worksheet_name " 
         f"{worksheet_name} from spreadsheet_id "
