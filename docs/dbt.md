@@ -54,7 +54,7 @@ dbt --version
 ```bash
 {{ config(
     materialized='ephemeral',
-    tags=['stg', 'budget', 'campaign']
+    tags=['stg', 'recon', 'spend']
 ) }}
 ```
 
@@ -62,7 +62,7 @@ dbt --version
 ```bash
 {{ config(
     materialized='ephemeral',
-    tags=['int', 'budget', 'campaign']
+    tags=['int', 'recon', 'spend']
 ) }}
 ```
 
@@ -70,7 +70,7 @@ dbt --version
 ```bash
 {{ config(
     materialized='table',
-    tags=['mart', 'budget', 'campaign']
+    tags=['mart', 'recon', 'spend']
 ) }}
 ```
 
@@ -110,6 +110,8 @@ dbt build `
   --profiles-dir dbt `
   --select tag:mart
 ```
+
+---
 
 ### Deployment with DAGs
 
