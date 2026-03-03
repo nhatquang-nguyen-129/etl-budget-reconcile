@@ -29,14 +29,14 @@ def backfill():
     """
     Backfill Budget Reconciliation
     ---
-    Workflow:
+    Principles:
         1. Resolve execution time window form CLI argument --input_month
         2. Validate OS environment variables
         3. Load secrets from GCP Secret Manager
         4. Resolve worksheet_name and spreadsheet_id
         5. Dispatch execution to DAG orchestrator
     ---
-    Return:
+    Returns:
         None
     """
 
