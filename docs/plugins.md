@@ -11,7 +11,8 @@
 - Dynamically **infer Google BigQuery schema** from Python DataFrame
 
 - Support optional **partitioning** and **clustering** configuration
---
+
+---
 
 ## Architecture
 
@@ -23,6 +24,8 @@
 
 - Initialization may fail due to invalid direction format or missing permissions
 
+---
+
 ### Validate dataset existence
 
 - The loader checks dataset existence with `_check_dataset_exist()`
@@ -30,6 +33,8 @@
 - The loader calls client.get_dataset() then returns `True` if exists 
 
 - If a `NotFound` exception is raised, it returns `False` then calls `_create_new_dataset()`
+
+---
 
 ### Create dataset if missing
 
@@ -39,6 +44,8 @@
 
 - The loader uses `exists_ok=True` while creating new dataset for idempotency
 
+---
+
 ### Validate table existence
 
 - The loader checks table existence with `_check_table_exist()`
@@ -46,6 +53,8 @@
 - The loader calls client.get_table() then returns `True` if exists 
 
 - If a `NotFound` exception is raised, it returns `False` then calls `_create_new_table()`
+
+---
 
 ### Create table if missing
 
@@ -65,6 +74,8 @@
 
 - After dynamically inferring the schema, the loader create new table with `_create_new_table()` if the table does not exist
 
+---
+
 ### Handle conflict logic
 
 - The loader controls conflict behavior using the mode parameter `INSERT` or `UPSERT`
@@ -82,6 +93,8 @@
 - With `UPSERT` mode, the loader executes a parameterized `DELETE` query using `UNNEST(@values)` if only one key is provided
 
 - With `UPSERT` mode, the loader executes a `DELETE` statement using an `EXISTS` join condition with a temporary table
+
+---
 
 ### Write DataFrame to Google BigQuery
 
