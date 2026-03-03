@@ -17,7 +17,7 @@ def extract_budget_allocation(
     spreadsheet_id,
 ) -> pd.DataFrame:
     """
-    Extract Budget Allocation from Google Spreadsheets
+    Extract Budget Allocation
     ---
     Principles:
         1. Validate input worksheet_name
@@ -113,6 +113,7 @@ def extract_budget_allocation(
 
         return df
     
+    # Worksheet not found
     except WorksheetNotFound as e:
         error = RuntimeError(
             "❌ [EXTRACT] Failed to extract Budget Allocation due to worksheet "
@@ -131,7 +132,7 @@ def extract_budget_allocation(
     except APIError as e:
         status = e.response.status_code if e.response else None
 
-    # Unexpected retryable API error
+    # Retryable API error
         if status in {
             408, 
             429, 
@@ -150,7 +151,7 @@ def extract_budget_allocation(
             error.retryable = True
             raise error from e
 
-    # Unauthorized non-retryable access error
+    # Non-retryable access error
         if status in {
             401, 
             403
@@ -158,13 +159,13 @@ def extract_budget_allocation(
 
             error = RuntimeError(               
                 "❌ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-                f"{worksheet_name} due to unauthorized access "
+                f"{worksheet_name} due to unauthorized access error "
                 f"{e} then this request is not eligible to retry."
             )
             error.retryable = False
             raise error from e
 
-    # Unexpected non-retryable API error
+    # Non-retryable API error
         error = RuntimeError(
             "❌ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
             f"{worksheet_name} due to API error "
@@ -174,20 +175,22 @@ def extract_budget_allocation(
         error.retryable = False
         raise error from e
 
-    # Unexpected retryable request timeout error
+    # Retryable request timeout error
     except requests.exceptions.Timeout as e:
         error = RuntimeError(
-            "⚠️ [EXTRACT] Failed to extract Budget Allocation for worksheet_name"
-            f"{worksheet_name} due to request timeout error then this request is eligible to retry."
+            "⚠️ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
+            f"{worksheet_name} due to request timeout error "
+            f"{e} then this request is eligible to retry."
         )
         error.retryable = True
         raise error from e
 
-    # Unexpected retryable request connection error
+    # Retryable request connection error
     except requests.exceptions.ConnectionError as e:
         error = RuntimeError(
             "⚠️ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-            f"{worksheet_name} due to request connection error hen this request is eligible to retry."
+            f"{worksheet_name} due to request connection error "
+            f"{e} then this request is eligible to retry."
         )
         error.retryable = True
         raise error from e
