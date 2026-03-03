@@ -2,7 +2,7 @@
 
 ## Purpose
 
-- Execute reconciliation DAGs for **historical data** outside of default runtime schedule
+- Execute Budget Reconciliation DAGs for **historical data** outside of default runtime schedule
 
 - Allow **manual override** of time range instead of relying on `main.py` predefined `MODE` mappings
 
@@ -12,11 +12,13 @@
 
 - Accept `--input_month` via argparse for flexible time-based backfill execution
 
+---
+
 ## Execution
 
 - Ensure Google Cloud Platform's Application Default Credentials already configured
 
-- Run Backfill for specific month using CLI
+- Run Backfill for Budget Reconciliation with specific month using CLI
 ```bash
 $env:PROJECT="your-gcp-project"
 $env:COMPANY="your-company-in-short"
