@@ -12,6 +12,8 @@
 
 - Dispatch execution to the **DAG orchestrator** without exposing manual entrypoints
 
+---
+
 ## Execution
 
 ### Runtime Contract
@@ -22,6 +24,8 @@
 
 - The resolved execution context is then passed to `dags_budget_reconcilie`
 
+---
+
 ### Secret Management
 
 - `main.py` initializes Google Secret Manager client to resolves required secrets
@@ -30,6 +34,7 @@
 
 - `main.py` retrieves secrets from `projects/{PROJECT}/secrets/{SECRET_NAME}/versions/latest`
 
+---
 
 ### Production Deployment
 
