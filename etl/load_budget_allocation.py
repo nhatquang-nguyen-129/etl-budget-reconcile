@@ -13,7 +13,7 @@ def load_budget_allocation(
     direction: str,
 ) -> None:
     """
-    Load Budget Allocation to Google BigQuery
+    Load Budget Allocation
     ---
     Principles:
         1. Validate input DataFrame
@@ -27,7 +27,7 @@ def load_budget_allocation(
     """    
 
     if df.empty:
-        print("⚠️ [LOADER] Empty Budget Allocation Dataframe then loading will be suspended.")
+        print("⚠️ [LOADER] Empty Budget Allocation then loading will be suspended.")
         return
 
     print(
