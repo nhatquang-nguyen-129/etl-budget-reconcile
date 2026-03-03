@@ -32,7 +32,7 @@ def transform_budget_allocation(
 
     try:
         
-        # Validate input
+    # Validate input
         if df.empty:
             print("⚠️ [TRANSFORM] Empty Budget Allocation input then transformation will be suspended.")
             return df
@@ -43,8 +43,8 @@ def transform_budget_allocation(
             "region",
             "details",
             "track",
+            "pillar",
             "group",
-            "content",
             "month",
             "start_date",
             "end_date",
@@ -62,7 +62,7 @@ def transform_budget_allocation(
                 f"{missing} then transformation will be suspended."
             )
         
-        # Safe cast numeric columns
+    # Safe cast numeric columns
         for col in [
             "initial_budget",
             "adjusted_budget",
@@ -75,7 +75,7 @@ def transform_budget_allocation(
                 .astype("Int64")
             )
 
-        # Transform derived columns
+    # Transform derived columns
         df["actual_budget"] = (
             df["initial_budget"]
             + df["adjusted_budget"]
@@ -110,7 +110,7 @@ def transform_budget_allocation(
             (df["budget_group"] == "FES").astype("Int64")
         ) * df["actual_budget"]
 
-        # Transform time columns
+    # Transform time columns
         df["month"] = df["month"].astype(str).str.strip()
 
         df["year"] = (
