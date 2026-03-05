@@ -40,8 +40,8 @@ select
 
     cast(null as string)  as category_level_1,
     cast(null as string)  as track,
+    cast(null as string)  as pillar,
     cast(null as string)  as group,
-    cast(null as string)  as content,
 
     cast(null as string)  as objective,
     cast(null as string)  as month,
@@ -64,8 +64,8 @@ with union_campaign as (
 
         category_level_1,
         track,
+        pillar,
         group,
-        content,
 
         objective,
         month,
@@ -89,8 +89,8 @@ select
 
     category_level_1,
     track,
+    pillar,
     group,
-    content,
 
     objective,
     month,
@@ -113,8 +113,8 @@ group by
     region,
     category_level_1,
     track,
+    pillar,
     group,
-    content,
     objective,
     month,
     year
