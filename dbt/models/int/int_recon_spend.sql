@@ -34,6 +34,7 @@ budget as (
     select
         budget_group,
         region,
+        details,
 
         category_level_1,
         track,
@@ -83,6 +84,8 @@ select
     coalesce(b.month, s.month)                       as month,
     coalesce(b.year, s.year)                         as year,
 
+    b.details,
+    
     b.initial_budget,
     b.adjusted_budget,
     b.additional_budget,
