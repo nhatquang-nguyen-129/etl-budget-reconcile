@@ -39,12 +39,19 @@ def dbt_budget_reconcile(
     )
 
     try:
-        subprocess.run(
+        result = subprocess.run(
             cmd,
             cwd="dbt",
             env=os.environ,
             check=True,
+            capture_output=True,
+            text=True,
         )
+
+        print(result.stdout)
+
+        if result.stderr:
+            print(result.stderr)
 
         print(
             "✅ [DBT] Successfully executed dbt build for Budget Reconciliation "
