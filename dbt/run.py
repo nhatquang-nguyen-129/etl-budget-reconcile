@@ -28,6 +28,7 @@ def dbt_budget_reconcile(
     cmd = [
         "dbt",
         "build",
+        "--project-dir", ".",
         "--profiles-dir", ".",
         "--select", select,
     ]

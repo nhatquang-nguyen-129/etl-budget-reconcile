@@ -86,6 +86,22 @@ dbt --version
 
 ## Deployment
 
+### BigQuery Metadata Permission
+
+- Budget Reconciliation models need to join spend data from multiple datasets using regional `INFORMATION_SCHEMA` views
+
+- Budget Reconciliation models specifically require the `BigQuery Metadata Viewer` role in the IAM
+```text
+roles/bigquery.metadataViewer
+```
+
+- Without this permission, dbt may fail with an error similar to
+```text
+Without this permission, dbt may fail with an error similar to
+```
+
+---
+
 ### Manual Deployment
 
 - Complie only with no execution
