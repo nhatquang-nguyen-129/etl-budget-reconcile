@@ -8,6 +8,8 @@
 
 - **Load** transformed data into `Google BigQuery` using idempotent `UPSERT` strategy
 
+---
+
 ## Extract
 
 - The extractor retrieves Budget Allocation data from Google Spreadsheets using `service account credentials`
@@ -25,6 +27,8 @@
 - The extractor classifies errors into retryable errors which are marked as `error.retryable = True`
 
 - The extractor classifies errors into non-retryable errors which are marked as `error.retryable = False`
+
+---
 
 ## Transform
 
@@ -47,6 +51,8 @@
 - The transformer calculates `total_effective_time` which is the difference between `start_date` and `end_date`
 
 - The transformer calculates `total_passed_time` which is the difference between current date and `start_date`
+
+---
 
 ## Load
 
