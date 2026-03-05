@@ -1,7 +1,7 @@
 import os
-from pathlib import Path
 import sys
-ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[0]
+from pathlib import Path
+ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
 from datetime import datetime, timedelta
@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 from google.cloud import secretmanager
 from google.api_core.client_options import ClientOptions
 
-from dags.dags_budget_reconciliation import dags_budget_reconciliation
+from dags.dags_budget_reconcile import dags_budget_reconcile
 
 COMPANY    = os.getenv("COMPANY")
 PROJECT    = os.getenv("PROJECT")
@@ -25,24 +25,25 @@ if not all([
     ACCOUNT,
     MODE
 ]):
-    raise EnvironmentError("❌ [MAIN] Failed to execute Budget Allocation main entrypoint due to missing required environment variables.")
+    raise EnvironmentError("❌ [MAIN] Failed to execute Budget Reconciliation main entrypoint due to missing required environment variables.")
 
 def main():
     """
-    Main Budget Allocation entrypoint
-    ---------
-    Workflow:
+    Main Budget Reconciliation entrypoint
+    ---
+    Principles:
         1. Resolve execution time window from MODE
         2. Validate OS environment variables
         3. Load secrets from GCP Secret Manager
         4. Resolve worksheet_name and spreadsheet_id
         5. Dispatch execution to DAG orchestrator
+    ---
     Return:
         None
     """
     
     print(
-        "🔄 [MAIN] Triggering to execute Budget Allocation main entrypoin for "
+        "🔄 [MAIN] Triggering to execute Budget Reconciliation main entrypoint for "
         f"{ACCOUNT} account of "
         f"{DEPARTMENT} department in "
         f"{COMPANY} company with "
@@ -61,7 +62,7 @@ def main():
         input_month = end_date.strftime("%Y-%m")
     else:
         raise ValueError(
-            "⚠️ [MAIN] Failed to trigger Budget Allocation main entrypoint due to unsupported mode "
+            "⚠️ [MAIN] Failed to trigger Budget Reconciliation main entrypoint due to unsupported mode "
             f"{MODE}."
         )
 
@@ -127,7 +128,7 @@ def main():
         )     
 
 # Execute DAGS
-    dags_budget_reconciliation(
+    dags_budget_reconcile(
         worksheet_name=worksheet_name,
         spreadsheet_id=spreadsheet_id
     )

@@ -10,7 +10,7 @@ from datetime import datetime
 from google.cloud import secretmanager
 from google.api_core.client_options import ClientOptions
 
-from dags.dags_budget_reconciliation import dags_budget_reconciliation
+from dags.dags_budget_reconcile import dags_budget_reconcile
 
 COMPANY    = os.getenv("COMPANY")
 PROJECT    = os.getenv("PROJECT")
@@ -23,31 +23,32 @@ if not all([
     DEPARTMENT,
     ACCOUNT
 ]):
-    raise EnvironmentError("❌ [BACKFILL] Failed to execute Budget Allocation backfill due to missing required environment variables.")
+    raise EnvironmentError("❌ [BACKFILL] Failed to execute Budget Reconciliation backfill due to missing required environment variables.")
 
 def backfill():
     """
-    Backfill Budget Allocation
-    ---------
-    Workflow:
+    Backfill Budget Reconciliation
+    ---
+    Principles:
         1. Resolve execution time window form CLI argument --input_month
         2. Validate OS environment variables
         3. Load secrets from GCP Secret Manager
         4. Resolve worksheet_name and spreadsheet_id
         5. Dispatch execution to DAG orchestrator
-    Return:
+    ---
+    Returns:
         None
     """
 
 # CLI arguments parser for manual input_month
     parser = argparse.ArgumentParser(
-        description="Manual Budget Allocation ETL Executor"
+        description="Manual Budget Reconciliation ETL Executor"
     )
 
     parser.add_argument(
         "--input_month",
         required=True,
-        help="Input month in YYYY-MM format (e.g., 2025-01)"
+        help="Input month in YYYY-MM format"
     )
 
     args = parser.parse_args()
@@ -57,7 +58,7 @@ def backfill():
             args.input_month, "%Y-%m"
         ).strftime("%Y-%m")
     except ValueError:
-        raise ValueError("❌ [BACKFILL] Failed to execute Budget Allocation backfill due to input_month must be in YYYY-MM format.")
+        raise ValueError("❌ [BACKFILL] Failed to execute Budget Reconciliation backfill due to input_month must be in YYYY-MM format.")
 
     year, month = input_month.split("-")
     month = month.zfill(2)
@@ -65,7 +66,7 @@ def backfill():
     worksheet_name = f"m{month}{year}"
 
     print(
-        "🔄 [BACKFILL] Triggering to execute Budget Allocation backfill for "
+        "🔄 [BACKFILL] Triggering to execute Budget Reconciliation backfill for "
         f"{ACCOUNT} account of "
         f"{DEPARTMENT} department in "
         f"{COMPANY} company for month "
@@ -126,7 +127,7 @@ def backfill():
         )
 
 # Execute DAGS
-    dags_budget_reconciliation(
+    dags_budget_reconcile(
         worksheet_name=worksheet_name,
         spreadsheet_id=spreadsheet_id
     )

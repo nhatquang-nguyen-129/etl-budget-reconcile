@@ -3,9 +3,9 @@
     materialized = 'table',
     alias = var('company') ~ '_table_recon_all_all_recon_spend',
     cluster_by = [
-      'budget_group_1',
+      'budget_group',
       'category_level_1',
-      'track_group',
+      'track',
     ],
     tags = ['mart', 'recon', 'spend']
   )

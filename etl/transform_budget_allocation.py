@@ -4,6 +4,7 @@ ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
 import pandas as pd
+
 from zoneinfo import ZoneInfo
 
 def transform_budget_allocation(
@@ -11,14 +12,14 @@ def transform_budget_allocation(
 ) -> pd.DataFrame:
     """
     Transform Budget Allocation
-    ---------
-    Workflow:
+    ---
+    Principles:
         1. Validate input
         2. Enrich budget columns
         3. Normalize date columns
         4. Calculate time range columns
         5. Enforce schema
-    ---------
+    ---
     Returns:
         1. DataFrame:
             Enforced budget allocation records
@@ -31,19 +32,19 @@ def transform_budget_allocation(
 
     try:
         
-        # Validate input
+    # Validate input
         if df.empty:
             print("⚠️ [TRANSFORM] Empty Budget Allocation input then transformation will be suspended.")
             return df
         
         required_cols = {
-            "budget_group_1",
-            "budget_group_2",
-            "region",
+            "budget_group",
             "category_level_1",
-            "track_group",
-            "pillar_group",
-            "content_group",
+            "region",
+            "details",
+            "track",
+            "pillar",
+            "group",
             "month",
             "start_date",
             "end_date",
@@ -61,7 +62,7 @@ def transform_budget_allocation(
                 f"{missing} then transformation will be suspended."
             )
         
-        # Safe cast numeric columns
+    # Safe cast numeric columns
         for col in [
             "initial_budget",
             "adjusted_budget",
@@ -74,7 +75,7 @@ def transform_budget_allocation(
                 .astype("Int64")
             )
 
-        # Transform derived columns
+    # Transform derived columns
         df["actual_budget"] = (
             df["initial_budget"]
             + df["adjusted_budget"]
@@ -82,26 +83,34 @@ def transform_budget_allocation(
         ).astype("Int64")
 
         df["grouped_marketing_budget"] = (
-            (df["budget_group_1"] == "KP").astype("Int64")
+            (df["budget_group"] == "KIDS").astype("Int64")
         ) * df["actual_budget"]
 
         df["grouped_supplier_budget"] = (
-            (df["budget_group_1"] == "NC").astype("Int64")
+            (df["budget_group"] == "SUP").astype("Int64")
         ) * df["actual_budget"]
 
         df["grouped_store_budget"] = (
-            (df["budget_group_1"] == "KD").astype("Int64")
+            (df["budget_group"] == "STORE").astype("Int64")
+        ) * df["actual_budget"]
+
+        df["grouped_ecommerce_budget"] = (
+            (df["budget_group"] == "ECOM").astype("Int64")
+        ) * df["actual_budget"]        
+
+        df["grouped_recruitment_budget"] = (
+            (df["budget_group"] == "HR").astype("Int64")
         ) * df["actual_budget"]
 
         df["grouped_customer_budget"] = (
-            (df["budget_group_1"] == "CS").astype("Int64")
+            (df["budget_group"] == "CS").astype("Int64")
         ) * df["actual_budget"]
 
-        df["grouped_recruitment_budget"] = (
-            (df["budget_group_1"] == "HC").astype("Int64")
+        df["grouped_festival_budget"] = (
+            (df["budget_group"] == "FES").astype("Int64")
         ) * df["actual_budget"]
 
-        # Transform time columns
+    # Transform time columns
         df["month"] = df["month"].astype(str).str.strip()
 
         df["year"] = (

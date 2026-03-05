@@ -14,20 +14,20 @@ def load_budget_allocation(
 ) -> None:
     """
     Load Budget Allocation
-    ----------------------
-    Workflow:
+    ---
+    Principles:
         1. Validate input DataFrame
         2. Validate output direction for Google BigQuery
         3. Set primary key(s) to month
         4. Use UPSERT mode with parameterized query for deduplication
         5. Make internalGoogleBigQueryLoader API call
-    ---------
+    ---
     Returns:
         None
     """    
 
     if df.empty:
-        print("⚠️ [LOADER] Empty Budget Allocation Dataframe then loading will be suspended.")
+        print("⚠️ [LOADER] Empty Budget Allocation then loading will be suspended.")
         return
 
     print(

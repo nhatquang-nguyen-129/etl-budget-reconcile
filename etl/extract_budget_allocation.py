@@ -3,9 +3,7 @@ from pathlib import Path
 ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
-import time
 import requests
-
 import pandas as pd
 
 from google.auth import default
@@ -19,15 +17,15 @@ def extract_budget_allocation(
     spreadsheet_id,
 ) -> pd.DataFrame:
     """
-    Extract Budget Allocation from Google Spreadsheets
-    ---------
-    Workflow:
+    Extract Budget Allocation
+    ---
+    Principles:
         1. Validate input worksheet_name
         2. Validate input spreadsheet_id
         3. Make API call for spreadsheets.readonly scope
         4. Append extract tabular data
         5. Enforce to DataFrame
-    ---------
+    ---
     Returns:
         1. DataFrame:
             Flattened budget allocation records
@@ -68,35 +66,54 @@ def extract_budget_allocation(
         
         sheet = google_gspread_client.open_by_key(spreadsheet_id)
         worksheet = sheet.worksheet(worksheet_name)
-        records = worksheet.get_all_records()
-        
-        print(
-            "✅ [EXTRACT] Successfully extracted "
-            f"{len(records)} record(s) in worksheet_name "
-            f"{worksheet_name} from spreadsheet_id "
-            f"{spreadsheet_id}."
-        )
+        values = worksheet.get_all_values()
 
-        if not records:
+        if not values:
             print(
                 "⚠️ [EXTRACT] Completely extracted Budget Allocation from worksheet_name "
                 f"{worksheet_name} but empty DataFrame returned."
             )
+            return pd.DataFrame()
 
-            df = pd.DataFrame()
-            
-            return df
+        input_headers = values[0]
+        input_rows = values[1:]
 
-        df = pd.DataFrame(records)
+        headers = [
+            str(col).strip()
+            for col in input_headers
+        ]
+
+        rows = []
         
+        removed_empty_rows = [
+            input_row for input_row in input_rows
+            if any(str(cell).strip() != "" for cell in input_row)
+        ]
+        
+        for removed_empty_row in removed_empty_rows:
+            padded = removed_empty_row + [""] * (len(headers) - len(removed_empty_row))
+            rows.append(padded[:len(headers)])
+
+        df = pd.DataFrame(
+            rows, 
+            columns=headers
+        )
+        
+        df = df.astype("string")
+
+        for col in df.columns:
+            df[col] = df[col].str.strip()
+
         print(
             "✅ [EXTRACT] Successfully extracted Budget Allocation from worksheet_name "
             f"{worksheet_name} with "
-            f"{len(df)} row(s). "
+            f"{len(df)} row(s) and "
+            f"{len(df.columns)} column(s)."
         )
 
         return df
-
+    
+    # Worksheet not found
     except WorksheetNotFound as e:
         error = RuntimeError(
             "❌ [EXTRACT] Failed to extract Budget Allocation due to worksheet "
@@ -115,7 +132,7 @@ def extract_budget_allocation(
     except APIError as e:
         status = e.response.status_code if e.response else None
 
-    # Unexpected retryable API error
+    # Retryable API error
         if status in {
             408, 
             429, 
@@ -134,7 +151,7 @@ def extract_budget_allocation(
             error.retryable = True
             raise error from e
 
-    # Unauthorized non-retryable access error
+    # Non-retryable access error
         if status in {
             401, 
             403
@@ -142,13 +159,13 @@ def extract_budget_allocation(
 
             error = RuntimeError(               
                 "❌ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-                f"{worksheet_name} due to unauthorized access "
+                f"{worksheet_name} due to unauthorized access error "
                 f"{e} then this request is not eligible to retry."
             )
             error.retryable = False
             raise error from e
 
-    # Unexpected non-retryable API error
+    # Non-retryable API error
         error = RuntimeError(
             "❌ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
             f"{worksheet_name} due to API error "
@@ -158,20 +175,22 @@ def extract_budget_allocation(
         error.retryable = False
         raise error from e
 
-    # Unexpected retryable request timeout error
+    # Retryable request timeout error
     except requests.exceptions.Timeout as e:
         error = RuntimeError(
-            "⚠️ [EXTRACT] Failed to extract Budget Allocation for worksheet_name"
-            f"{worksheet_name} due to request timeout error then this request is eligible to retry."
+            "⚠️ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
+            f"{worksheet_name} due to request timeout error "
+            f"{e} then this request is eligible to retry."
         )
         error.retryable = True
         raise error from e
 
-    # Unexpected retryable request connection error
+    # Retryable request connection error
     except requests.exceptions.ConnectionError as e:
         error = RuntimeError(
             "⚠️ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-            f"{worksheet_name} due to request connection error hen this request is eligible to retry."
+            f"{worksheet_name} due to request connection error "
+            f"{e} then this request is eligible to retry."
         )
         error.retryable = True
         raise error from e

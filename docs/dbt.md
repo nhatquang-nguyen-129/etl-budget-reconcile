@@ -1,11 +1,15 @@
-# Data Build Tool for Facebook Ads SQL Materialization
+# Data Build Tool for Budget Reconcilication
 
 ## Purpose
 
-- Use **dbt** to build Facebook analytics-ready **materialized tables** in **Google BigQuery**
-- Used **dbt** only for **SQL transformations** and all ELT processes are handled upstream
-- Join Facebook Ads campaign insights fact tables with campaign metadata dim table
-- Join Facebook Ads ad insights fact tables with campaign metadata/adset metadata/ad metadata/ad creative dim tables
+- Use **dbt** adapter to build Budget analytics-ready materialized tables in **Google BigQuery**
+
+- Used **dbt** only for SQL transformations and all ELT processes are handled upstream
+
+- Join Budget Reconciliation with multiple facts table separated by **month**
+
+- Join Budget Reconciliation materialized table with advertising spend
+
 - Define final analytical grain and manage model dependencies using `ref()`
 
 ---
@@ -14,9 +18,9 @@
 
 ### Activate Python venv
 
-- Create Python virtual environment if `venv\` folder not exists
+- Create Python virtual environment with Python 3.13 interpreter if `venv\` folder not exists
 ```bash
-python -m venv venv
+& "C:\Users\ADMIN\AppData\Local\Programs\Python\Python313\python.exe" -m venv venv
 ```
 
 - Activate Python virtual environment and check `(venv)` in the terminal
@@ -50,7 +54,7 @@ dbt --version
 ```bash
 {{ config(
     materialized='ephemeral',
-    tags=['stg', 'facebook', 'campaign']
+    tags=['stg', 'recon', 'spend']
 ) }}
 ```
 
@@ -58,15 +62,15 @@ dbt --version
 ```bash
 {{ config(
     materialized='ephemeral',
-    tags=['int', 'facebook', 'campaign']
+    tags=['int', 'recon', 'spend']
 ) }}
 ```
 
-- `models/mart` is the final materialization layer and materialized as `table` with example:
+- `models/mart` is the final materialization layer and materialized as physical `table` with example:
 ```bash
 {{ config(
     materialized='table',
-    tags=['mart', 'facebook', 'campaign']
+    tags=['mart', 'recon', 'spend']
 ) }}
 ```
 
@@ -82,6 +86,22 @@ dbt --version
 
 ## Deployment
 
+### BigQuery Metadata Permission
+
+- Budget Reconciliation models need to join spend data from multiple datasets using regional `INFORMATION_SCHEMA` views
+
+- Budget Reconciliation models specifically require the `BigQuery Metadata Viewer` role in the IAM
+```text
+roles/bigquery.metadataViewer
+```
+
+- Without this permission, dbt may fail with an error similar to
+```text
+Without this permission, dbt may fail with an error similar to
+```
+
+---
+
 ### Manual Deployment
 
 - Complie only with no execution
@@ -94,20 +114,7 @@ dbt compile
 dbt build
 ```
 
-- Run only campaign insights
-```bash
-$env:PROJECT="seer-digital-ads"
-$env:COMPANY="kids"
-$env:DEPARTMENT="marketing"
-$env:ACCOUNT="main"
-
-dbt build `
-  --project-dir dbt `
-  --profiles-dir dbt `
-  --select tag:mart,tag:recon
-```
-
-- Run only ad insights
+- Run only budget reconciliation
 ```bash
 $env:PROJECT="your-gcp-project"
 $env:COMPANY="your-company-in-short"
@@ -117,15 +124,17 @@ $env:ACCOUNT="your-account"
 dbt build `
   --project-dir dbt `
   --profiles-dir dbt `
-  --select tag:ad
+  --select tag:mart
 ```
+
+---
 
 ### Deployment with DAGs
 
 - Using Python `subprocess` to call dbt for each stream
 ```bash
-dbt_facebook_ads(
+dbt_budget_reconcilie(
     google_cloud_project=PROJECT,
-    select="campaign",
+    select="tag:mart",
 )
 ```

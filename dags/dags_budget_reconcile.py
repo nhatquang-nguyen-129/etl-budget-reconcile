@@ -10,7 +10,7 @@ from etl.extract_budget_allocation import extract_budget_allocation
 from etl.transform_budget_allocation import transform_budget_allocation
 from etl.load_budget_allocation import load_budget_allocation
 
-from dbt.run import dbt_budget_reconciliation
+from dbt.run import dbt_budget_reconcile
 
 COMPANY     = os.getenv("COMPANY")
 PROJECT     = os.getenv("PROJECT")
@@ -18,11 +18,25 @@ DEPARTMENT  = os.getenv("DEPARTMENT")
 ACCOUNT     = os.getenv("ACCOUNT")
 MODE        = os.getenv("MODE")
 
-def dags_budget_reconciliation(
+def dags_budget_reconcile(
     *,
     worksheet_name: str,
     spreadsheet_id: str,
 ):
+    """
+    DAG Orchestration for Budget Reconciliation
+    ---
+    Principles:
+        1. Trigger Budget Allocation extraction from Google Spreadsheets
+        2. Transform budget data into validated schema
+        3. Load transformed records into Google BigQuery
+        4. Execute dbt models for materialization
+        5. Execute dbt models of reconciliation
+    ---
+    Returns:
+        1. None:
+    """
+
     print(
         "🔄 [DAGS] Trigger to update Budget Reconciliation with worksheet_name " 
         f"{worksheet_name} from spreadsheet_id "
@@ -108,7 +122,7 @@ def dags_budget_reconciliation(
 # Materialization with dbt
     print("🔄 [DAGS] Trigger to materialize Budget Allocation with dbt...")
 
-    dbt_budget_reconciliation(
+    dbt_budget_reconcile(
         google_cloud_project=PROJECT,
         select="tag:mart,tag:recon",
     )

@@ -8,14 +8,13 @@
 with spend as (
 
     select
-        budget_group_1,
-        budget_group_2,
+        budget_group,
         region,
 
         category_level_1,
-        track_group,
-        pillar_group,
-        content_group,
+        track,
+        pillar,
+        `group`,
 
         platform,
         objective,
@@ -33,14 +32,14 @@ with spend as (
 budget as (
 
     select
-        budget_group_1,
-        budget_group_2,
+        budget_group,
         region,
+        details,
 
         category_level_1,
-        track_group,
-        pillar_group,
-        content_group,
+        track,
+        pillar,
+        `group`,
 
         platform,
         objective,
@@ -59,8 +58,10 @@ budget as (
         grouped_marketing_budget,
         grouped_supplier_budget,
         grouped_store_budget,
-        grouped_customer_budget,
+        grouped_ecommerce_budget,
         grouped_recruitment_budget,
+        grouped_customer_budget,
+        grouped_festival_budget,
 
         total_effective_time,
         total_passed_time
@@ -69,14 +70,13 @@ budget as (
 )
 
 select
-    coalesce(b.budget_group_1, s.budget_group_1)     as budget_group_1,
-    coalesce(b.budget_group_2, s.budget_group_2)     as budget_group_2,
+    coalesce(b.budget_group, s.budget_group)         as budget_group,
     coalesce(b.region, s.region)                     as region,
 
     coalesce(b.category_level_1, s.category_level_1) as category_level_1,
-    coalesce(b.track_group, s.track_group)           as track_group,
-    coalesce(b.pillar_group, s.pillar_group)         as pillar_group,
-    coalesce(b.content_group, s.content_group)       as content_group,
+    coalesce(b.track, s.track)                       as track,
+    coalesce(b.pillar, s.pillar)                     as pillar,
+    coalesce(b.`group`, s.`group`)                   as `group`,
 
     coalesce(b.platform, s.platform)                 as platform,
     coalesce(b.objective, s.objective)               as objective,
@@ -84,6 +84,8 @@ select
     coalesce(b.month, s.month)                       as month,
     coalesce(b.year, s.year)                         as year,
 
+    b.details,
+    
     b.initial_budget,
     b.adjusted_budget,
     b.additional_budget,
@@ -92,8 +94,10 @@ select
     b.grouped_marketing_budget,
     b.grouped_supplier_budget,
     b.grouped_store_budget,
-    b.grouped_customer_budget,
+    b.grouped_ecommerce_budget,
     b.grouped_recruitment_budget,
+    b.grouped_customer_budget,
+    b.grouped_festival_budget,
 
     b.start_date,
     b.end_date,
@@ -199,13 +203,12 @@ select
 
 from budget b
 full outer join spend s
-    on  b.budget_group_1   = s.budget_group_1
-    and b.budget_group_2   = s.budget_group_2
+    on  b.budget_group     = s.budget_group
     and b.region           = s.region
     and b.category_level_1 = s.category_level_1
-    and b.track_group      = s.track_group
-    and b.pillar_group     = s.pillar_group
-    and b.content_group    = s.content_group
+    and b.track            = s.track
+    and b.pillar           = s.pillar
+    and b.`group`          = s.`group`
     and b.platform         = s.platform
     and b.objective        = s.objective
     and b.month            = s.month

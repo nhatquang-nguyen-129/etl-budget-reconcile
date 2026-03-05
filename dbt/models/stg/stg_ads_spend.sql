@@ -35,20 +35,19 @@
 
 select
     cast(null as string)  as platform,
-    cast(null as string)  as budget_group_1,
-    cast(null as string)  as budget_group_2,
+    cast(null as string)  as budget_group,
     cast(null as string)  as region,
 
     cast(null as string)  as category_level_1,
-    cast(null as string)  as track_group,
-    cast(null as string)  as pillar_group,
-    cast(null as string)  as content_group,
+    cast(null as string)  as track,
+    cast(null as string)  as pillar,
+    cast(null as string)  as `group`,
 
     cast(null as string)  as objective,
     cast(null as string)  as month,
-    cast(null as int64)  as year,
+    cast(null as int64)   as year,
 
-    cast(null as int64) as spend,
+    cast(null as int64)   as spend,
     cast(null as string)  as objective_status
 from unnest([]) as _
 
@@ -60,14 +59,13 @@ with union_campaign as (
 
     select
         platform,
-        budget_group_1,
-        budget_group_2,
+        budget_group,
         region,
 
         category_level_1,
-        track_group,
-        pillar_group,
-        content_group,
+        track,
+        pillar,
+        `group`,
 
         objective,
         month,
@@ -86,14 +84,13 @@ with union_campaign as (
 
 select
     platform,
-    budget_group_1,
-    budget_group_2,
+    budget_group,
     region,
 
     category_level_1,
-    track_group,
-    pillar_group,
-    content_group,
+    track,
+    pillar,
+    `group`,
 
     objective,
     month,
@@ -112,13 +109,12 @@ select
 from union_campaign
 group by
     platform,
-    budget_group_1,
-    budget_group_2,
+    budget_group,
     region,
     category_level_1,
-    track_group,
-    pillar_group,
-    content_group,
+    track,
+    pillar,
+    `group`,
     objective,
     month,
     year
