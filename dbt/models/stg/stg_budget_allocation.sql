@@ -36,8 +36,8 @@ select
 
     cast(null as string)  as category_level_1,
     cast(null as string)  as track,
+    cast(null as string)  as pillar,
     cast(null as string)  as group,
-    cast(null as string)  as content,
 
     cast(null as string)  as month,
     cast(null as int64)   as year,
@@ -75,8 +75,8 @@ select
 
     category_level_1,
     track,
+    pillar,
     group,
-    content,
 
     month,
     year,
