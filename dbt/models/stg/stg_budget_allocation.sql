@@ -33,6 +33,7 @@
 select
     cast(null as string)  as budget_group,
     cast(null as string)  as region,
+    cast(null as string)  as details,
 
     cast(null as string)  as category_level_1,
     cast(null as string)  as track,
@@ -72,6 +73,7 @@ from unnest([]) as _
 select
     budget_group,
     region,
+    details,
 
     category_level_1,
     track,
