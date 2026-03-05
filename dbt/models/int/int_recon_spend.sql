@@ -14,7 +14,7 @@ with spend as (
         category_level_1,
         track,
         pillar,
-        group,
+        `group`,
 
         platform,
         objective,
@@ -38,7 +38,7 @@ budget as (
         category_level_1,
         track,
         pillar,
-        group,
+        `group`,
 
         platform,
         objective,
@@ -75,7 +75,7 @@ select
     coalesce(b.category_level_1, s.category_level_1) as category_level_1,
     coalesce(b.track, s.track)                       as track,
     coalesce(b.pillar, s.pillar)                     as pillar,
-    coalesce(b.group, s.group)                       as group,
+    coalesce(b.`group`, s.`group`)                   as `group`,
 
     coalesce(b.platform, s.platform)                 as platform,
     coalesce(b.objective, s.objective)               as objective,
@@ -205,7 +205,7 @@ full outer join spend s
     and b.category_level_1 = s.category_level_1
     and b.track            = s.track
     and b.pillar           = s.pillar
-    and b.group            = s.group
+    and b.`group`          = s.`group`
     and b.platform         = s.platform
     and b.objective        = s.objective
     and b.month            = s.month
