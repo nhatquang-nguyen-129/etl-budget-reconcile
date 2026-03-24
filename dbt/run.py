@@ -40,6 +40,7 @@ def dbt_budget_reconcile(
     )
 
     try:
+        
         result = subprocess.run(
             cmd,
             cwd="dbt",
@@ -61,6 +62,7 @@ def dbt_budget_reconcile(
         )
 
     except subprocess.CalledProcessError as e:
+        
         raise RuntimeError(
             "❌ [DBT] Failed to execute dbt build for Budget Reconciliation "
             f"{select} selector to Google Cloud Project "
