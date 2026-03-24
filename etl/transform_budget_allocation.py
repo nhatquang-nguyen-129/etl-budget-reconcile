@@ -34,7 +34,11 @@ def transform_budget_allocation(
         
     # Validate input
         if df.empty:
-            print("⚠️ [TRANSFORM] Empty Budget Allocation input then transformation will be suspended.")
+            
+            print(
+                "⚠️ [TRANSFORM] Empty Budget Allocation input then transformation will be suspended."
+            )
+            
             return df
         
         required_cols = {
@@ -56,7 +60,9 @@ def transform_budget_allocation(
         }
 
         missing = required_cols - set(df.columns)
+        
         if missing:
+        
             raise ValueError(
                 "❌ [TRANSFORM] Failed to transform Budget Allocation due to missing columns "
                 f"{missing} then transformation will be suspended."
@@ -68,6 +74,7 @@ def transform_budget_allocation(
             "adjusted_budget",
             "additional_budget",
         ]:
+            
             df[col] = (
                 pd.to_numeric(df[col], errors="coerce")
                 .fillna(0)
@@ -159,6 +166,7 @@ def transform_budget_allocation(
         return df
 
     except Exception as e:
+        
         raise RuntimeError(
             "❌ [TRANSFORM] Failed to transform Budget Allocation due to "
             f"{e}."
