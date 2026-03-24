@@ -23,6 +23,7 @@ if not all([
     DEPARTMENT,
     ACCOUNT
 ]):
+    
     raise EnvironmentError(
         "❌ [BACKFILL] Failed to execute Budget Reconciliation backfill due to missing required environment variables."
     )
