@@ -43,12 +43,12 @@ def dags_budget_reconcile(
         f"{spreadsheet_id}..."
     )
 
-# ETL for Budget Allocation
+    # ETL for Budget Allocation
     DAGS_BUDGET_ATTEMPTS = 3
 
     for attempt in range(1, DAGS_BUDGET_ATTEMPTS + 1):
     
-    # Extract       
+        # Extract
         try:
             
             print(
@@ -100,7 +100,7 @@ def dags_budget_reconcile(
             
             time.sleep(wait_to_retry)
 
-    # Transform
+        # Transform
     print(
         "🔄 [DAGS] Triggering to transform Budget Allocation with "
         f"{len(df)} row(s)..."
@@ -108,7 +108,7 @@ def dags_budget_reconcile(
 
     df = transform_budget_allocation(df)
 
-    # Load
+        # Load
     _budget_allocation_direction = (
         f"{PROJECT}."
         f"{COMPANY}_dataset_recon_api_raw."
@@ -125,7 +125,7 @@ def dags_budget_reconcile(
         direction=_budget_allocation_direction,
     )
 
-# Materialization with dbt
+    # Materialization with dbt
     print("🔄 [DAGS] Trigger to materialize Budget Allocation with dbt...")
 
     dbt_budget_reconcile(
