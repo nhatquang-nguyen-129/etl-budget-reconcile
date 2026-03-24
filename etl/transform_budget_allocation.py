@@ -21,8 +21,8 @@ def transform_budget_allocation(
         5. Enforce schema
     ---
     Returns:
-        1. DataFrame:
-            Enforced budget allocation records
+        1. pandas.DataFrame:
+            Enforced budget allocation DataFrame
     """
 
     print(
