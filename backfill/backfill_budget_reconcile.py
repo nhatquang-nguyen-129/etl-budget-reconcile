@@ -23,7 +23,9 @@ if not all([
     DEPARTMENT,
     ACCOUNT
 ]):
-    raise EnvironmentError("❌ [BACKFILL] Failed to execute Budget Reconciliation backfill due to missing required environment variables.")
+    raise EnvironmentError(
+        "❌ [BACKFILL] Failed to execute Budget Reconciliation backfill due to missing required environment variables."
+    )
 
 def backfill():
     """
@@ -54,13 +56,19 @@ def backfill():
     args = parser.parse_args()
 
     try:
+        
         input_month = datetime.strptime(
             args.input_month, "%Y-%m"
         ).strftime("%Y-%m")
+    
     except ValueError:
-        raise ValueError("❌ [BACKFILL] Failed to execute Budget Reconciliation backfill due to input_month must be in YYYY-MM format.")
+    
+        raise ValueError(
+            "❌ [BACKFILL] Failed to execute Budget Reconciliation backfill due to input_month must be in YYYY-MM format."
+        )
 
     year, month = input_month.split("-")
+    
     month = month.zfill(2)
 
     worksheet_name = f"m{month}{year}"
@@ -77,7 +85,10 @@ def backfill():
 
 # Initialize Google Secret Manager
     try:
-        print("🔍 [BACKFILL] Initialize Google Secret Manager client...")        
+        
+        print(
+            "🔍 [BACKFILL] Initialize Google Secret Manager client..."
+        )
         
         google_secret_client = secretmanager.SecretManagerServiceClient(
             client_options=ClientOptions(
@@ -85,9 +96,12 @@ def backfill():
             )
         )
 
-        print("✅ [BACKFILL] Successfully initialized Google Secret Manager client.")
+        print(
+            "✅ [BACKFILL] Successfully initialized Google Secret Manager client."
+        )
     
     except Exception as e:
+        
         raise RuntimeError(
             "❌ [BACKFILL] Failed to initialize Google Secret Manager client due to."
             f"{e}."
@@ -95,6 +109,7 @@ def backfill():
 
 # Resolve spreadsheet_id from Google Secret Manager
     try:
+        
         secret_account_id = (
             f"{COMPANY}_secret_{DEPARTMENT}_budget_account_id_{ACCOUNT}"
         )
@@ -121,6 +136,7 @@ def backfill():
         )
 
     except Exception as e:
+        
         raise RuntimeError(
             "❌ [BACKFILL] Failed to retrieve Budget Allocation spreadsheet_id from Google Secret Manager due to "
             f"{e}."
@@ -134,7 +150,11 @@ def backfill():
 
 # Entrypoint
 if __name__ == "__main__":
+    
     try:
+    
         backfill()
+    
     except Exception:
+    
         sys.exit(1)
