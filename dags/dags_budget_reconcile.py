@@ -43,13 +43,14 @@ def dags_budget_reconcile(
         f"{spreadsheet_id}..."
     )
 
-# ETL for Budget Allocation
+    # ETL for Budget Allocation
     DAGS_BUDGET_ATTEMPTS = 3
 
     for attempt in range(1, DAGS_BUDGET_ATTEMPTS + 1):
     
-    # Extract       
+        # Extract
         try:
+            
             print(
                 "🔄 [DAGS] Triggering to extract Budget Allocation with worksheet_name "
                 f"{worksheet_name} from spreadsheet_id "
@@ -65,6 +66,7 @@ def dags_budget_reconcile(
             break
 
         except Exception as e:
+            
             retryable = getattr(e, "retryable", False)
 
             print(
@@ -75,12 +77,14 @@ def dags_budget_reconcile(
             )
 
             if not retryable:
+                
                 raise RuntimeError(
                     "❌ [DAGS] Failed to trigger Budget Allocation extraction with worksheet_name "
                     f"{worksheet_name} due to non-retryable error then DAG execution will be suspended."
                 ) from e
 
             if attempt == DAGS_BUDGET_ATTEMPTS:
+                
                 raise RuntimeError(
                     "❌ [DAGS] Failed to trigger Budget Allocation extraction with worksheet_name" 
                     f"{worksheet_name} from spreadsheet_id "
@@ -88,13 +92,15 @@ def dags_budget_reconcile(
                 ) from e
 
             wait_to_retry = 60 + (attempt - 1) * 30
+            
             print(
                 "🔄 [DAGS] Waiting "
                 f"{wait_to_retry} second(s) before retrying extract..."
             )
+            
             time.sleep(wait_to_retry)
 
-    # Transform
+        # Transform
     print(
         "🔄 [DAGS] Triggering to transform Budget Allocation with "
         f"{len(df)} row(s)..."
@@ -102,7 +108,7 @@ def dags_budget_reconcile(
 
     df = transform_budget_allocation(df)
 
-    # Load
+        # Load
     _budget_allocation_direction = (
         f"{PROJECT}."
         f"{COMPANY}_dataset_recon_api_raw."
@@ -119,7 +125,7 @@ def dags_budget_reconcile(
         direction=_budget_allocation_direction,
     )
 
-# Materialization with dbt
+    # Materialization with dbt
     print("🔄 [DAGS] Trigger to materialize Budget Allocation with dbt...")
 
     dbt_budget_reconcile(
