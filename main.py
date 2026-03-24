@@ -13,13 +13,9 @@ from google.api_core.client_options import ClientOptions
 from dags.dags_budget_reconcile import dags_budget_reconcile
 
 COMPANY    = os.getenv("COMPANY")
-
 PROJECT    = os.getenv("PROJECT")
-
 DEPARTMENT = os.getenv("DEPARTMENT")
-
 ACCOUNT    = os.getenv("ACCOUNT")
-
 MODE       = os.getenv("MODE")
 
 if not all([
@@ -29,6 +25,7 @@ if not all([
     ACCOUNT,
     MODE
 ]):
+    
     raise EnvironmentError(
         "❌ [MAIN] Failed to execute Budget Reconciliation main entrypoint due to missing required environment variables."
     )
@@ -57,7 +54,7 @@ def main():
         f"{PROJECT}..."
     )
 
-# Resolve input time range
+    # Resolve input time range
     ICT = ZoneInfo("Asia/Ho_Chi_Minh")
     
     today = datetime.now(ICT)
@@ -102,7 +99,7 @@ def main():
         f"{worksheet_name}."
     )
 
-# Initialize Google Secret Manager
+    # Initialize Google Secret Manager
     try:
         
         print(
@@ -126,7 +123,7 @@ def main():
             f"{e}."
         )
         
-# Resolve spreadsheet_id from Google Secret Manager
+    # Resolve spreadsheet_id from Google Secret Manager
     try:
         
         secret_account_id = (
@@ -161,13 +158,13 @@ def main():
             f"{e}."
         )     
 
-# Execute DAGS
+    # Execute DAGS
     dags_budget_reconcile(
         worksheet_name=worksheet_name,
         spreadsheet_id=spreadsheet_id
     )
 
-# Entrypoint
+    # Entrypoint
 if __name__ == "__main__":
     
     try:
