@@ -42,7 +42,7 @@ def backfill():
         None
     """
 
-# CLI arguments parser for manual input_month
+    # CLI arguments parser for manual input_month
     parser = argparse.ArgumentParser(
         description="Manual Budget Reconciliation ETL Executor"
     )
@@ -83,7 +83,7 @@ def backfill():
         f"{PROJECT}..."
     )
 
-# Initialize Google Secret Manager
+    # Initialize Google Secret Manager
     try:
         
         print(
@@ -107,7 +107,7 @@ def backfill():
             f"{e}."
         )
 
-# Resolve spreadsheet_id from Google Secret Manager
+    # Resolve spreadsheet_id from Google Secret Manager
     try:
         
         secret_account_id = (
@@ -142,13 +142,13 @@ def backfill():
             f"{e}."
         )
 
-# Execute DAGS
+    # Execute DAGS
     dags_budget_reconcile(
         worksheet_name=worksheet_name,
         spreadsheet_id=spreadsheet_id
     )
 
-# Entrypoint
+    # Entrypoint
 if __name__ == "__main__":
     
     try:
