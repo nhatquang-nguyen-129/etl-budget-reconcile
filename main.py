@@ -13,9 +13,13 @@ from google.api_core.client_options import ClientOptions
 from dags.dags_budget_reconcile import dags_budget_reconcile
 
 COMPANY    = os.getenv("COMPANY")
+
 PROJECT    = os.getenv("PROJECT")
+
 DEPARTMENT = os.getenv("DEPARTMENT")
+
 ACCOUNT    = os.getenv("ACCOUNT")
+
 MODE       = os.getenv("MODE")
 
 if not all([
@@ -25,7 +29,9 @@ if not all([
     ACCOUNT,
     MODE
 ]):
-    raise EnvironmentError("❌ [MAIN] Failed to execute Budget Reconciliation main entrypoint due to missing required environment variables.")
+    raise EnvironmentError(
+        "❌ [MAIN] Failed to execute Budget Reconciliation main entrypoint due to missing required environment variables."
+    )
 
 def main():
     """
@@ -99,7 +105,9 @@ def main():
 # Initialize Google Secret Manager
     try:
         
-        print("🔍 [MAIN] Initialize Google Secret Manager client...")
+        print(
+            "🔍 [MAIN] Initialize Google Secret Manager client..."
+        )
 
         google_secret_client = secretmanager.SecretManagerServiceClient(
             client_options=ClientOptions(
@@ -107,7 +115,9 @@ def main():
             )
         )
 
-        print("✅ [MAIN] Successfully initialized Google Secret Manager client.")
+        print(
+            "✅ [MAIN] Successfully initialized Google Secret Manager client."
+        )
     
     except Exception as e:
         
