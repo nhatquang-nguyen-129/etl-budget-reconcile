@@ -27,14 +27,18 @@ def load_budget_allocation(
     """    
 
     if df.empty:
-        print("⚠️ [LOADER] Empty Budget Allocation then loading will be suspended.")
+        
+        print(
+            "⚠️ [LOADER] Empty Budget Allocation then loading will be suspended."
+        )
+
         return
 
     print(
-        "🔄 [LOADER] Triggering to load "
+        "🔄 [LOADER] Loading "
         f"{len(df)} row(s) of Budget Allocation to Google BigQuery table "
         f"{direction}..."
-        )
+    )
 
     loader = internalGoogleBigqueryLoader()
 
