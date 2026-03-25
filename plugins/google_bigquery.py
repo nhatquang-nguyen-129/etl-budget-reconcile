@@ -194,113 +194,200 @@ class internalGoogleBigqueryLoader:
     @staticmethod
     def _infer_df_schema(df: pd.DataFrame) -> list[bigquery.SchemaField]:
 
+        print(
+            "🔍 [PLUGIN] Inferring DataFrame schema for..."
+            f"{len(df)} row(s)..."
+        )
+
         schema = []
 
         for col in df.columns:
             
             series = df[col]
-
             dtype = series.dtype
 
-            if pd.api.types.is_integer_dtype(dtype):
+            print(f"\n🔍 [INFER] Column: {col}")
+            print(f"    dtype: {dtype}")
+            print(f"    sample: {series.dropna().head(3).tolist()}")
 
-                bq_type = "INT64"
+            try:
+                if pd.api.types.is_integer_dtype(dtype):
+                    bq_type = "INT64"
 
-            elif pd.api.types.is_float_dtype(dtype):
+                elif pd.api.types.is_float_dtype(dtype):
+                    bq_type = "FLOAT64"
 
-                bq_type = "FLOAT64"
+                elif pd.api.types.is_bool_dtype(dtype):
+                    bq_type = "BOOL"
 
-            elif pd.api.types.is_bool_dtype(dtype):
+                elif pd.api.types.is_datetime64_any_dtype(dtype):
+                    bq_type = "TIMESTAMP"
 
-                bq_type = "BOOL"
+                else:
+                    sample = series.dropna().head(100)
+                    bq_type = "STRING"
 
-            elif pd.api.types.is_datetime64_any_dtype(dtype):
+                    if not sample.empty:
 
-                bq_type = "TIMESTAMP"
+                        # 🔢 Numeric check
+                        try:
+                            parsed = pd.to_numeric(sample, errors="raise")
+                            if (parsed % 1 == 0).all():
+                                bq_type = "INT64"
+                            else:
+                                bq_type = "FLOAT64"
 
-            else:
+                            print(f"    ✅ Parsed as NUMERIC → {bq_type}")
 
-                sample = series.dropna().head(100)
+                        except Exception as e:
+                            print(f"    ❌ Numeric parse failed: {e}")
 
-                bq_type = "STRING"
+                        # 📅 Datetime check
+                        try:
+                            parsed = pd.to_datetime(sample, errors="raise")
 
-                if not sample.empty:
+                            has_time = not all(
+                                (parsed.dt.hour == 0)
+                                & (parsed.dt.minute == 0)
+                                & (parsed.dt.second == 0)
+                            )
 
-                    # Check for numeric type
-                    try:
+                            bq_type = "TIMESTAMP" if has_time else "DATE"
 
-                        parsed = pd.to_numeric(sample, errors="raise")
+                            print(f"    ✅ Parsed as DATETIME → {bq_type}")
 
-                        if (parsed % 1 == 0).all():
+                        except Exception as e:
+                            print(f"    ❌ Datetime parse failed: {e}")
 
-                            bq_type = "INT64"
+                print(f"    🎯 Final type: {bq_type}")
 
-                        else:
+                schema.append(bigquery.SchemaField(col, bq_type))
 
-                            bq_type = "FLOAT64"
+            except Exception as e:
+                print(f"🔥 [ERROR] Failed infer column {col}: {e}")
+                raise
 
-                    except:
-
-                        pass
-
-                    # Check for datetime only if string looks like datetime
-                    try:
-                        
-                        parsed = pd.to_datetime(sample, errors="raise")
-
-                        has_time = not all(
-                            (parsed.dt.hour == 0)
-                            & (parsed.dt.minute == 0)
-                            & (parsed.dt.second == 0)
-                        )
-
-                        bq_type = "TIMESTAMP" if has_time else "DATE"
-
-                    except:
-                        
-                        pass
-
-            schema.append(bigquery.SchemaField(col, bq_type))
-
+        print("✅ [DEBUG] Completed schema inference.")
         return schema
 
     # 1.3.5. Enforce DataFrame schema
     @staticmethod
     def _enforce_df_schema(
-        df: pd.DataFrame,
-        schema: list[bigquery.SchemaField]
-    ) -> pd.DataFrame:
+        df, 
+        schema
+    ):
+
+        print(
+            f"🔄 [PLUGIN] Enforcing DataFrame schema for... "
+            f"{len(df)} row(s)..."
+        )
 
         for field in schema:
-            
+
             col = field.name
+            
+            target_type = field.field_type
 
             if col not in df.columns:
-            
+                
+                print(
+                    "⚠️ [PLUGIN] Failed to find column "
+                    f"{col} then schema enforcement for this column will be skipped."
+                )
+                
                 continue
 
-            if field.field_type == "INT64":
-            
-                df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
+            print(
+                "🔄 [PLUGIN] Enforcing column "
+                f"{col} to "
+                f"{target_type}..."
+            )
 
-            elif field.field_type == "FLOAT64":
-            
-                df[col] = pd.to_numeric(df[col], errors="coerce")
+            try:
 
-            elif field.field_type == "BOOL":
-            
-                df[col] = df[col].astype("boolean")
+                if target_type == "INT64":
 
-            elif field.field_type == "TIMESTAMP":
-            
-                df[col] = pd.to_datetime(df[col], errors="coerce")
+                    converted = pd.to_numeric(df[col], errors="coerce")
 
-            elif field.field_type == "DATE":
+                    if converted.isna().sum() > df[col].isna().sum():
+                        
+                        raise RuntimeError(
+                            "❌ [PLUGIN] Failed to enforce column "
+                            f"{col} due to invalid INT64 values detected in this column."
+                        )
+
+                    df[col] = converted.astype("Int64")
+
+                elif target_type == "FLOAT64":
+
+                    converted = pd.to_numeric(df[col], errors="coerce")
+
+                    if converted.isna().sum() > df[col].isna().sum():
+                        
+                        raise RuntimeError(
+                            "❌ [PLUGIN] Failed to enforce column "
+                            f" {col} due to invalid FLOAT64 values detected in this column."
+                        )
+
+                    df[col] = converted
+
+                elif target_type == "BOOL":
+
+                    df[col] = df[col].astype("boolean")
+
+                elif target_type == "TIMESTAMP":
+
+                    converted = pd.to_datetime(df[col], errors="coerce")
+
+                    if converted.isna().sum() > df[col].isna().sum():
+                        
+                        raise RuntimeError(
+                            "❌ [PLUGIN] Failed to enforce column "
+                            f"{col} due to invalid TIMESTAMP values detected in this column."
+                        )
+
+                    df[col] = converted
+
+                elif target_type == "DATE":
+
+                    converted = pd.to_datetime(df[col], errors="coerce")
+
+                    if converted.isna().sum() > df[col].isna().sum():
+                        
+                        raise RuntimeError(
+                            "❌ [PLUGIN] Failed to enforce column "
+                            f"{col} due to invalid DATE values detected in this column."
+                        )
+
+                    df[col] = converted.dt.date
+
+                elif target_type == "STRING":
+
+                    df[col] = df[col].astype(str)
+
+                else:
+                    
+                    df[col] = df[col].astype(str)
+
+                print(
+                    f"✅ [PLUGIN] Successfully enforced schema for column "
+                    f"{col} to "
+                    f"{target_type}."
+                )
+
+            except Exception as e:
                 
-                df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
+                raise RuntimeError(
+                    "❌ [PLUGIN] Failed to enforce column "
+                    f"{col} to "
+                    f"{target_type} due to "
+                    f"{e}."
+                )
 
-            else:
-                df[col] = df[col].astype("string")
+        print(
+            "✅ [PLUGIN] Successfully enforced DataFrame schema for "
+            f"{len(df)} row(s)."
+        )
 
         return df
 
@@ -679,7 +766,7 @@ class internalGoogleBigqueryLoader:
                     write_disposition="WRITE_APPEND"
                 ),
             )
-            
+
             job.result()
             
             written_rows = job.output_rows or 0

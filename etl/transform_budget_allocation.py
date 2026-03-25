@@ -117,14 +117,13 @@ def transform_budget_allocation(
             (df["budget_group"] == "FES").astype("Int64")
         ) * df["actual_budget"]
 
-    # Transform time columns
+        # Transform time columns
+        today = pd.Timestamp.now(tz="Asia/Ho_Chi_Minh").date()        
+        
         df["month"] = df["month"].astype(str).str.strip()
 
         df["year"] = (
-            pd.to_datetime(
-                df["month"] + "-01",
-                errors="coerce"
-            )
+            pd.to_datetime(df["month"] + "-01", errors="coerce")
             .dt.year
             .fillna(0)
             .astype("Int64")
@@ -132,31 +131,21 @@ def transform_budget_allocation(
 
         df["start_date"] = pd.to_datetime(
             df["start_date"], errors="coerce"
-        ).dt.normalize().dt.date
+        ).dt.date
 
         df["end_date"] = pd.to_datetime(
             df["end_date"], errors="coerce"
-        ).dt.normalize().dt.date
+        ).dt.date
 
         df["total_effective_time"] = (
-            (
-                pd.to_datetime(df["end_date"])
-                - pd.to_datetime(df["start_date"])
-            )
-            .dt.days
-            .fillna(0)
+            (df["end_date"] - df["start_date"])
+            .apply(lambda x: x.days if pd.notnull(x) else 0)
             .astype("Int64")
         )
 
         df["total_passed_time"] = (
-            (
-                pd.Timestamp.now(tz="Asia/Ho_Chi_Minh")
-                .normalize()
-                .tz_localize(None)
-                - pd.to_datetime(df["start_date"])
-            )
-            .dt.days
-            .fillna(0)
+            (today - df["start_date"])
+            .apply(lambda x: x.days if pd.notnull(x) else 0)
             .astype("Int64")
         )
 
