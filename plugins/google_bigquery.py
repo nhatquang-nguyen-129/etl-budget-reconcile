@@ -215,6 +215,7 @@ class internalGoogleBigqueryLoader:
             )
 
             try:
+                
                 if pd.api.types.is_integer_dtype(dtype):
                     
                     bq_type = "INT64"
@@ -282,7 +283,7 @@ class internalGoogleBigqueryLoader:
             
             print(
                 "🔍 [PLUGIN] Validating Google BigQuery table " 
-                "f{direction} existence..."
+                f"{direction} existence..."
             )
             
             self._init_client(direction)
@@ -316,7 +317,9 @@ class internalGoogleBigqueryLoader:
     ) -> None:
         
         try:
-            
+
+            schema = self._infer_df_schema(df)
+
             print(
                 "🔍 [PLUGIN] Creating Google BigQuery table "
                 f"{direction} with partition on "
@@ -326,7 +329,7 @@ class internalGoogleBigqueryLoader:
 
             table = bigquery.Table(
                 direction,
-                schema=self._infer_df_schema(df),
+                schema=schema,
             )
 
             if partition:
@@ -395,8 +398,7 @@ class internalGoogleBigqueryLoader:
 
             print(
                 "🔄 [PLUGIN] Applying UPSERT for Google BigQuery table "
-                f"{direction} with  "
-                f"{keys} key(s)..."
+                f"{direction} with {keys} key(s)..."
             )
 
             missing = [k for k in keys if k not in df.columns]
@@ -415,7 +417,6 @@ class internalGoogleBigqueryLoader:
                 print(
                     "⚠️ [PLUGIN] Applied UPSERT conflict handling but no keys found in DataFrame then existing records in Google BigQuery table "
                     f"{direction} will be skipped."
-            
                 )
                 
                 return
@@ -424,67 +425,67 @@ class internalGoogleBigqueryLoader:
             if len(keys) == 1:
                 
                 key = keys[0]
-                
-                series = df_to_delete[key]
-                
-                values = series.tolist()
+
+                table = self.client.get_table(direction)
+
+                schema_map = {field.name: field.field_type for field in table.schema}
+
+                bq_type = schema_map.get(key)
+
+                if not bq_type:
+
+                    raise ValueError(
+                        "❌ [PLUGIN] Failed to find key "
+                        f"{key} not found in Google BigQuery schema."
+                    )
+
+                values = df_to_delete[key].dropna().tolist()
 
                 if not values:
+
                     return
 
-                if pd.api.types.is_datetime64_any_dtype(series):
-                    
-                    bq_type = "TIMESTAMP"
-                
-                elif pd.api.types.is_integer_dtype(series):
-                
-                    bq_type = "INT64"
-                
-                elif pd.api.types.is_float_dtype(series):
-                
-                    bq_type = "FLOAT64"
-                
-                elif pd.api.types.is_bool_dtype(series):
-                
-                    bq_type = "BOOL"
-                
-                else:
-                
-                    bq_type = "STRING"
+                try:
 
-                query_check_exist = f"""
-                    SELECT DISTINCT {key}
-                    FROM `{direction}`
-                    WHERE {key} IN UNNEST(@values)
-                """
+                    if bq_type == "INT64":
 
-                job_check_exist = self.client.query(
-                    query_check_exist,
-                    job_config=bigquery.QueryJobConfig(
-                        query_parameters=[
-                            bigquery.ArrayQueryParameter(
-                                "values",
-                                bq_type,
-                                values
-                            )
+                        values = [int(v) for v in values]
+
+                    elif bq_type == "FLOAT64":
+
+                        values = [float(v) for v in values]
+
+                    elif bq_type == "BOOL":
+
+                        values = [bool(v) for v in values]
+
+                    elif bq_type == "STRING":
+
+                        values = [str(v) for v in values]
+
+                    elif bq_type == "DATE":
+
+                        values = [
+                            v.isoformat() if hasattr(v, "isoformat") else str(v)
+                            for v in values
                         ]
-                    ),
-                )
 
-                existing_values = [row[key] for row in job_check_exist.result()]
+                    elif bq_type == "TIMESTAMP":
 
-                if not existing_values:
-                    
-                    print(
-                        "⚠️ [PLUGIN] Applied UPSERT conflict handling but no matching keys found in Google BigQuery table "
-                        f"{direction} then existing records deletion via parameterized query will be skipped."
+                        values = [pd.Timestamp(v) for v in values]
+
+                except Exception as e:
+
+                    raise RuntimeError(
+                        "❌ [PLUGIN] Failed to normalize values for key "
+                        f"{key} due to "
+                        f"{e}."
                     )
-                    
-                    return
 
                 print(
                     "🔍 [PLUGIN] Deleting existing row(s) in Google BigQuery table "
-                    f"{direction}..."
+                    f"{direction} using key "
+                    f"{key}..."
                 )
                 
                 query_delete_exist = f"""
@@ -511,10 +512,8 @@ class internalGoogleBigqueryLoader:
 
                 print(
                     "✅ [PLUGIN] Successfully deleted "
-                    f"{deleted_rows} row(s) in Google BigQuery table"
-                    f"{direction} using parameterized query with "
-                    f"{key} key to delete."
-                    
+                    f"{deleted_rows} row(s) in Google BigQuery table "
+                    f"{direction} using parameterized query with key {key}."
                 )
 
                 return
@@ -535,7 +534,7 @@ class internalGoogleBigqueryLoader:
                         "❌ [PLUGIN] Failed to delete existing records in Google BigQuery table "
                         f"{direction} due to dtype mismatch on key "
                         f"{k} with "
-                        f"{df_to_delete[k].dtype} in temporary table versus "
+                        f"{df_to_delete[k].dtype} in temporary table to "
                         f"{df[k].dtype} in direction."
                     )
 
