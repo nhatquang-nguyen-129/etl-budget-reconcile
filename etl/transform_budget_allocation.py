@@ -5,8 +5,6 @@ sys.path.append(str(ROOT_FOLDER_LOCATION))
 
 import pandas as pd
 
-from zoneinfo import ZoneInfo
-
 def transform_budget_allocation(
     df: pd.DataFrame
 ) -> pd.DataFrame:
@@ -76,11 +74,23 @@ def transform_budget_allocation(
         ]:
             
             df[col] = (
-                pd.to_numeric(df[col], errors="coerce")
-                .fillna(0)
-                .round(0)
-                .astype("Int64")
+                df[col]
+                .astype(str)
+                .str.replace(",", "", regex=False)
+                .str.strip()
             )
+
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+            null_count = df[col].isna().sum()
+            if null_count > 0:
+                print(
+                    "⚠️ [TRANSFORM] Failed to transform column "
+                    f"{col} due to this column has "
+                    f"{null_count} NaN after numeric conversion."
+                )
+
+            df[col] = df[col].fillna(0).round(0).astype("Int64")
 
     # Transform derived columns
         df["actual_budget"] = (
@@ -118,43 +128,34 @@ def transform_budget_allocation(
         ) * df["actual_budget"]
 
     # Transform time columns
+        today = pd.Timestamp.now(tz="Asia/Ho_Chi_Minh").date()        
+        
         df["month"] = df["month"].astype(str).str.strip()
 
         df["year"] = (
-            pd.to_datetime(
-            df["month"] + "-01",
-            errors="coerce"
-            )
-        .dt
-        .year
-        .fillna(0)
-        .astype("Int64")
+            pd.to_datetime(df["month"] + "-01", errors="coerce")
+            .dt.year
+            .fillna(0)
+            .astype("Int64")
         )
 
         df["start_date"] = pd.to_datetime(
             df["start_date"], errors="coerce"
-        ).dt.tz_localize(ZoneInfo("Asia/Ho_Chi_Minh"))
+        ).dt.date
 
         df["end_date"] = pd.to_datetime(
             df["end_date"], errors="coerce"
-        ).dt.tz_localize(ZoneInfo("Asia/Ho_Chi_Minh"))       
+        ).dt.date
 
         df["total_effective_time"] = (
-            (
-                df["end_date"] - df["start_date"]
-            )
-            .dt.days
-            .fillna(0)
-            .astype("Int64")        
+            (df["end_date"] - df["start_date"])
+            .apply(lambda x: x.days if pd.notnull(x) else 0)
+            .astype("Int64")
         )
 
         df["total_passed_time"] = (
-            (
-                pd.Timestamp.now(tz=ZoneInfo("Asia/Ho_Chi_Minh")).normalize()
-                - df["start_date"]
-            )
-            .dt.days
-            .fillna(0)
+            (today - df["start_date"])
+            .apply(lambda x: x.days if pd.notnull(x) else 0)
             .astype("Int64")
         )
 

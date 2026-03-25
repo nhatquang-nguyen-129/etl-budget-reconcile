@@ -3,6 +3,10 @@ from pathlib import Path
 ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
+from datetime import (
+    date,
+    datetime
+)
 import pandas as pd
 import uuid
 
@@ -192,33 +196,128 @@ class internalGoogleBigqueryLoader:
 
     # 1.3.4. Infer DataFrame schema
     @staticmethod
-    def _infer_table_schema(df: pd.DataFrame) -> list[bigquery.SchemaField]:
-        
-        schema = []
-        
-        for col, dtype in df.dtypes.items():
-        
-            if pd.api.types.is_integer_dtype(dtype):
-        
-                bq_type = "INT64"
-        
-            elif pd.api.types.is_float_dtype(dtype):
-        
-                bq_type = "FLOAT64"
-        
-            elif pd.api.types.is_bool_dtype(dtype):
-        
-                bq_type = "BOOL"
-        
-            elif pd.api.types.is_datetime64_any_dtype(dtype):
-        
-                bq_type = "TIMESTAMP"
-        
-            else:
-        
-                bq_type = "STRING"
+    def _infer_df_schema(df: pd.DataFrame) -> list[bigquery.SchemaField]:
 
-            schema.append(bigquery.SchemaField(col, bq_type))
+        print(
+            "🔄 [PLUGIN] Inferring DataFrame schema for..."
+            f"{len(df)} row(s)..."
+        )
+
+        schema = []
+
+        for col in df.columns:
+            
+            series = df[col]
+            
+            dtype = series.dtype
+
+            print(
+                "🔄 [PLUGIN] Inferring schema for column "
+                f"{col} to dtype "
+                f"{dtype}..."
+            )
+
+            try:
+                
+                if pd.api.types.is_integer_dtype(dtype):
+                    
+                    bq_type = "INT64"
+
+                elif pd.api.types.is_float_dtype(dtype):
+                    
+                    bq_type = "FLOAT64"
+
+                elif pd.api.types.is_bool_dtype(dtype):
+                    
+                    bq_type = "BOOL"
+
+                elif pd.api.types.is_datetime64_any_dtype(dtype):
+                    
+                    bq_type = "TIMESTAMP"
+
+                else:
+                    
+                    non_null = series.dropna()
+
+                    if non_null.empty:
+                        
+                        bq_type = "STRING"
+
+                    else:
+                        
+                        sample = non_null.head(50)
+
+                        if sample.map(type).eq(date).all():
+                            
+                            bq_type = "DATE"
+
+                        elif sample.map(lambda x: isinstance(x, (datetime, pd.Timestamp))).all():
+                            
+                            if sample.map(lambda x: x.hour == 0 and x.minute == 0 and x.second == 0).all():
+                            
+                                bq_type = "DATE"
+                            
+                            else:
+                            
+                                bq_type = "TIMESTAMP"
+
+                        elif sample.map(lambda x: isinstance(x, str)).all():
+
+                            try:
+                                
+                                sample.astype(int)
+                                
+                                bq_type = "INT64"
+
+                            except:
+                                
+                                try:
+                                
+                                    sample.astype(float)
+                                
+                                    bq_type = "FLOAT64"
+
+                                except:
+                                
+                                    try:
+                                
+                                        pd.to_datetime(sample, errors="raise")
+                                
+                                        bq_type = "TIMESTAMP"
+                                
+                                    except:
+                                
+                                        bq_type = "STRING"
+
+                        else:
+                            bq_type = "STRING"
+                
+                print(
+                    f"✅ [PLUGIN] Successfully inferred schema for column "
+                    f"{col} from dtype "
+                    f"{dtype} to Google BigQuery type "
+                    f"{bq_type}."
+                )
+
+                schema.append(bigquery.SchemaField(
+                    col, 
+                    bq_type
+                    )
+                )
+
+            except Exception as e:
+                
+                raise RuntimeError(
+                    "❌ [PLUGIN] Failed to infer schema for column "
+                    f"{col} with dtype "
+                    f"{dtype} due to "
+                    f"{e}."
+                )
+
+        print(
+            "✅ [PLUGIN] Successfully inferred DataFrame schema for "
+            f"{len(df)} row(s)."
+        )
         
         return schema
 
@@ -232,7 +331,7 @@ class internalGoogleBigqueryLoader:
             
             print(
                 "🔍 [PLUGIN] Validating Google BigQuery table " 
-                "f{direction} existence..."
+                f"{direction} existence..."
             )
             
             self._init_client(direction)
@@ -266,7 +365,9 @@ class internalGoogleBigqueryLoader:
     ) -> None:
         
         try:
-            
+
+            schema = self._infer_df_schema(df)
+
             print(
                 "🔍 [PLUGIN] Creating Google BigQuery table "
                 f"{direction} with partition on "
@@ -276,7 +377,7 @@ class internalGoogleBigqueryLoader:
 
             table = bigquery.Table(
                 direction,
-                schema=self._infer_table_schema(df),
+                schema=schema,
             )
 
             if partition:
@@ -345,8 +446,7 @@ class internalGoogleBigqueryLoader:
 
             print(
                 "🔄 [PLUGIN] Applying UPSERT for Google BigQuery table "
-                f"{direction} with  "
-                f"{keys} key(s)..."
+                f"{direction} with {keys} key(s)..."
             )
 
             missing = [k for k in keys if k not in df.columns]
@@ -365,7 +465,6 @@ class internalGoogleBigqueryLoader:
                 print(
                     "⚠️ [PLUGIN] Applied UPSERT conflict handling but no keys found in DataFrame then existing records in Google BigQuery table "
                     f"{direction} will be skipped."
-            
                 )
                 
                 return
@@ -374,67 +473,74 @@ class internalGoogleBigqueryLoader:
             if len(keys) == 1:
                 
                 key = keys[0]
-                
-                series = df_to_delete[key]
-                
-                values = series.tolist()
+
+                table = self.client.get_table(direction)
+
+                schema_map = {field.name: field.field_type for field in table.schema}
+
+                bq_type = schema_map.get(key)
+
+                if not bq_type:
+
+                    raise ValueError(
+                        "❌ [PLUGIN] Failed to find key "
+                        f"{key} not found in Google BigQuery schema."
+                    )
+
+                values = df_to_delete[key].dropna().tolist()
 
                 if not values:
+
                     return
 
-                if pd.api.types.is_datetime64_any_dtype(series):
+                try:
                     
-                    bq_type = "TIMESTAMP"
-                
-                elif pd.api.types.is_integer_dtype(series):
-                
-                    bq_type = "INT64"
-                
-                elif pd.api.types.is_float_dtype(series):
-                
-                    bq_type = "FLOAT64"
-                
-                elif pd.api.types.is_bool_dtype(series):
-                
-                    bq_type = "BOOL"
-                
-                else:
-                
-                    bq_type = "STRING"
+                    if bq_type == "INT64":
 
-                query_check_exist = f"""
-                    SELECT DISTINCT {key}
-                    FROM `{direction}`
-                    WHERE {key} IN UNNEST(@values)
-                """
+                        values = [int(v) for v in values]
 
-                job_check_exist = self.client.query(
-                    query_check_exist,
-                    job_config=bigquery.QueryJobConfig(
-                        query_parameters=[
-                            bigquery.ArrayQueryParameter(
-                                "values",
-                                bq_type,
-                                values
-                            )
+                    elif bq_type == "FLOAT64":
+
+                        values = [float(v) for v in values]
+
+                    elif bq_type == "BOOL":
+
+                        values = [
+                            v if isinstance(v, bool)
+                            else str(v).lower() in ["true", "1"]
+                            for v in values
                         ]
-                    ),
-                )
 
-                existing_values = [row[key] for row in job_check_exist.result()]
+                    elif bq_type == "STRING":
 
-                if not existing_values:
-                    
-                    print(
-                        "⚠️ [PLUGIN] Applied UPSERT conflict handling but no matching keys found in Google BigQuery table "
-                        f"{direction} then existing records deletion via parameterized query will be skipped."
+                        values = [str(v) for v in values]
+
+                    elif bq_type == "DATE":
+
+                        values = [
+                            pd.to_datetime(v).date()
+                            for v in values
+                        ]
+
+                    elif bq_type == "TIMESTAMP":
+
+                        values = [
+                            pd.Timestamp(v).to_pydatetime()
+                            for v in values
+                        ]
+
+                except Exception as e:
+
+                    raise RuntimeError(
+                        "❌ [PLUGIN] Failed to normalize values for key "
+                        f"{key} due to "
+                        f"{e}."
                     )
-                    
-                    return
 
                 print(
                     "🔍 [PLUGIN] Deleting existing row(s) in Google BigQuery table "
-                    f"{direction}..."
+                    f"{direction} using key "
+                    f"{key}..."
                 )
                 
                 query_delete_exist = f"""
@@ -461,10 +567,8 @@ class internalGoogleBigqueryLoader:
 
                 print(
                     "✅ [PLUGIN] Successfully deleted "
-                    f"{deleted_rows} row(s) in Google BigQuery table"
-                    f"{direction} using parameterized query with "
-                    f"{key} key to delete."
-                    
+                    f"{deleted_rows} row(s) in Google BigQuery table "
+                    f"{direction} using parameterized query with key {key}."
                 )
 
                 return
@@ -485,7 +589,7 @@ class internalGoogleBigqueryLoader:
                         "❌ [PLUGIN] Failed to delete existing records in Google BigQuery table "
                         f"{direction} due to dtype mismatch on key "
                         f"{k} with "
-                        f"{df_to_delete[k].dtype} in temporary table versus "
+                        f"{df_to_delete[k].dtype} in temporary table to "
                         f"{df[k].dtype} in direction."
                     )
 
