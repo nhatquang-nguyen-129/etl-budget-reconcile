@@ -76,11 +76,23 @@ def transform_budget_allocation(
         ]:
             
             df[col] = (
-                pd.to_numeric(df[col], errors="coerce")
-                .fillna(0)
-                .round(0)
-                .astype("Int64")
+                df[col]
+                .astype(str)
+                .str.replace(",", "", regex=False)
+                .str.strip()
             )
+
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+            null_count = df[col].isna().sum()
+            if null_count > 0:
+                print(
+                    "⚠️ [TRANSFORM] Failed to transform column "
+                    f"{col} due to this column has "
+                    f"{null_count} NaN after numeric conversion."
+                )
+
+            df[col] = df[col].fillna(0).round(0).astype("Int64")
 
     # Transform derived columns
         df["actual_budget"] = (

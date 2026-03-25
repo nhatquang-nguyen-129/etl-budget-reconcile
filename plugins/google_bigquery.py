@@ -3,6 +3,7 @@ from pathlib import Path
 ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
+from datetime import date
 import pandas as pd
 import uuid
 
@@ -195,7 +196,7 @@ class internalGoogleBigqueryLoader:
     def _infer_df_schema(df: pd.DataFrame) -> list[bigquery.SchemaField]:
 
         print(
-            "🔍 [PLUGIN] Inferring DataFrame schema for..."
+            "🔄 [PLUGIN] Inferring DataFrame schema for..."
             f"{len(df)} row(s)..."
         )
 
@@ -204,194 +205,74 @@ class internalGoogleBigqueryLoader:
         for col in df.columns:
             
             series = df[col]
+            
             dtype = series.dtype
 
-            print(f"\n🔍 [INFER] Column: {col}")
-            print(f"    dtype: {dtype}")
-            print(f"    sample: {series.dropna().head(3).tolist()}")
-
-            try:
-                if pd.api.types.is_integer_dtype(dtype):
-                    bq_type = "INT64"
-
-                elif pd.api.types.is_float_dtype(dtype):
-                    bq_type = "FLOAT64"
-
-                elif pd.api.types.is_bool_dtype(dtype):
-                    bq_type = "BOOL"
-
-                elif pd.api.types.is_datetime64_any_dtype(dtype):
-                    bq_type = "TIMESTAMP"
-
-                else:
-                    sample = series.dropna().head(100)
-                    bq_type = "STRING"
-
-                    if not sample.empty:
-
-                        # 🔢 Numeric check
-                        try:
-                            parsed = pd.to_numeric(sample, errors="raise")
-                            if (parsed % 1 == 0).all():
-                                bq_type = "INT64"
-                            else:
-                                bq_type = "FLOAT64"
-
-                            print(f"    ✅ Parsed as NUMERIC → {bq_type}")
-
-                        except Exception as e:
-                            print(f"    ❌ Numeric parse failed: {e}")
-
-                        # 📅 Datetime check
-                        try:
-                            parsed = pd.to_datetime(sample, errors="raise")
-
-                            has_time = not all(
-                                (parsed.dt.hour == 0)
-                                & (parsed.dt.minute == 0)
-                                & (parsed.dt.second == 0)
-                            )
-
-                            bq_type = "TIMESTAMP" if has_time else "DATE"
-
-                            print(f"    ✅ Parsed as DATETIME → {bq_type}")
-
-                        except Exception as e:
-                            print(f"    ❌ Datetime parse failed: {e}")
-
-                print(f"    🎯 Final type: {bq_type}")
-
-                schema.append(bigquery.SchemaField(col, bq_type))
-
-            except Exception as e:
-                print(f"🔥 [ERROR] Failed infer column {col}: {e}")
-                raise
-
-        print("✅ [DEBUG] Completed schema inference.")
-        return schema
-
-    # 1.3.5. Enforce DataFrame schema
-    @staticmethod
-    def _enforce_df_schema(
-        df, 
-        schema
-    ):
-
-        print(
-            f"🔄 [PLUGIN] Enforcing DataFrame schema for... "
-            f"{len(df)} row(s)..."
-        )
-
-        for field in schema:
-
-            col = field.name
-            
-            target_type = field.field_type
-
-            if col not in df.columns:
-                
-                print(
-                    "⚠️ [PLUGIN] Failed to find column "
-                    f"{col} then schema enforcement for this column will be skipped."
-                )
-                
-                continue
-
             print(
-                "🔄 [PLUGIN] Enforcing column "
-                f"{col} to "
-                f"{target_type}..."
+                "🔄 [PLUGIN] Inferring schema for column "
+                f"{col} to dtype "
+                f"{dtype}..."
             )
 
             try:
+                if pd.api.types.is_integer_dtype(dtype):
+                    
+                    bq_type = "INT64"
 
-                if target_type == "INT64":
+                elif pd.api.types.is_float_dtype(dtype):
+                    
+                    bq_type = "FLOAT64"
 
-                    converted = pd.to_numeric(df[col], errors="coerce")
+                elif pd.api.types.is_bool_dtype(dtype):
+                    
+                    bq_type = "BOOL"
 
-                    if converted.isna().sum() > df[col].isna().sum():
-                        
-                        raise RuntimeError(
-                            "❌ [PLUGIN] Failed to enforce column "
-                            f"{col} due to invalid INT64 values detected in this column."
-                        )
-
-                    df[col] = converted.astype("Int64")
-
-                elif target_type == "FLOAT64":
-
-                    converted = pd.to_numeric(df[col], errors="coerce")
-
-                    if converted.isna().sum() > df[col].isna().sum():
-                        
-                        raise RuntimeError(
-                            "❌ [PLUGIN] Failed to enforce column "
-                            f" {col} due to invalid FLOAT64 values detected in this column."
-                        )
-
-                    df[col] = converted
-
-                elif target_type == "BOOL":
-
-                    df[col] = df[col].astype("boolean")
-
-                elif target_type == "TIMESTAMP":
-
-                    converted = pd.to_datetime(df[col], errors="coerce")
-
-                    if converted.isna().sum() > df[col].isna().sum():
-                        
-                        raise RuntimeError(
-                            "❌ [PLUGIN] Failed to enforce column "
-                            f"{col} due to invalid TIMESTAMP values detected in this column."
-                        )
-
-                    df[col] = converted
-
-                elif target_type == "DATE":
-
-                    converted = pd.to_datetime(df[col], errors="coerce")
-
-                    if converted.isna().sum() > df[col].isna().sum():
-                        
-                        raise RuntimeError(
-                            "❌ [PLUGIN] Failed to enforce column "
-                            f"{col} due to invalid DATE values detected in this column."
-                        )
-
-                    df[col] = converted.dt.date
-
-                elif target_type == "STRING":
-
-                    df[col] = df[col].astype(str)
+                elif pd.api.types.is_datetime64_any_dtype(dtype):
+                    
+                    bq_type = "TIMESTAMP"
 
                 else:
                     
-                    df[col] = df[col].astype(str)
+                    non_null = series.dropna()
+
+                    if not non_null.empty and non_null.map(type).eq(date).all():
+                        
+                        bq_type = "DATE"
+                    
+                    else:
+                    
+                        bq_type = "STRING"
 
                 print(
-                    f"✅ [PLUGIN] Successfully enforced schema for column "
-                    f"{col} to "
-                    f"{target_type}."
+                    f"✅ [PLUGIN] Successfully inferred schema for column "
+                    f"{col} from dtype "
+                    f"{dtype} to Google BigQuery type "
+                    f"{bq_type}."
+                )
+
+                schema.append(bigquery.SchemaField(
+                    col, 
+                    bq_type
+                    )
                 )
 
             except Exception as e:
                 
                 raise RuntimeError(
-                    "❌ [PLUGIN] Failed to enforce column "
-                    f"{col} to "
-                    f"{target_type} due to "
+                    "❌ [PLUGIN] Failed to infer schema for column "
+                    f"{col} with dtype "
+                    f"{dtype} due to "
                     f"{e}."
                 )
 
         print(
-            "✅ [PLUGIN] Successfully enforced DataFrame schema for "
+            "✅ [PLUGIN] Successfully inferred DataFrame schema for "
             f"{len(df)} row(s)."
         )
+        
+        return schema
 
-        return df
-
-    # 1.3.6. Check table existence
+    # 1.3.5. Check table existence
     def _check_table_exist(
             self, 
             direction: str
@@ -401,7 +282,7 @@ class internalGoogleBigqueryLoader:
             
             print(
                 "🔍 [PLUGIN] Validating Google BigQuery table " 
-                f"{direction} existence..."
+                "f{direction} existence..."
             )
             
             self._init_client(direction)
@@ -424,7 +305,7 @@ class internalGoogleBigqueryLoader:
             
             return False
 
-    # 1.3.7. Create new table
+    # 1.3.6. Create new table
     def _create_new_table(
         self,
         *,
@@ -474,7 +355,7 @@ class internalGoogleBigqueryLoader:
                 f"{str(e)}."
             )
 
-    # 1.3.8. Handle table conflict
+    # 1.3.7. Handle table conflict
     def _handle_table_conflict(
         self,
         *,
@@ -539,13 +420,6 @@ class internalGoogleBigqueryLoader:
                 
                 return
 
-            schema = self.client.get_table(direction).schema
-
-            df_to_delete = self._enforce_df_schema(
-                df_to_delete.copy(),
-                schema
-            )
-
         # Single delete using parameterized query
             if len(keys) == 1:
                 
@@ -553,19 +427,30 @@ class internalGoogleBigqueryLoader:
                 
                 series = df_to_delete[key]
                 
-                if series.dropna().empty:
-                
-                    return
-
-                field_map = {f.name: f.field_type for f in schema}
-
-                bq_type = field_map.get(key, "STRING")
-                
-                values = df_to_delete[key].dropna().tolist()
+                values = series.tolist()
 
                 if not values:
-                    
                     return
+
+                if pd.api.types.is_datetime64_any_dtype(series):
+                    
+                    bq_type = "TIMESTAMP"
+                
+                elif pd.api.types.is_integer_dtype(series):
+                
+                    bq_type = "INT64"
+                
+                elif pd.api.types.is_float_dtype(series):
+                
+                    bq_type = "FLOAT64"
+                
+                elif pd.api.types.is_bool_dtype(series):
+                
+                    bq_type = "BOOL"
+                
+                else:
+                
+                    bq_type = "STRING"
 
                 query_check_exist = f"""
                     SELECT DISTINCT {key}
@@ -641,6 +526,18 @@ class internalGoogleBigqueryLoader:
                 f"{project}.{dataset}._tmp_delete_keys_"
                 f"{uuid.uuid4().hex[:8]}"
             )
+
+            for k in keys:
+            
+                if df_to_delete[k].dtype != df[k].dtype:
+            
+                    raise TypeError(
+                        "❌ [PLUGIN] Failed to delete existing records in Google BigQuery table "
+                        f"{direction} due to dtype mismatch on key "
+                        f"{k} with "
+                        f"{df_to_delete[k].dtype} in temporary table versus "
+                        f"{df[k].dtype} in direction."
+                    )
 
             self.client.load_table_from_dataframe(
                 df_to_delete,
@@ -739,7 +636,7 @@ class internalGoogleBigqueryLoader:
             f"{mode}."
         )
     
-    # 1.3.9. Write table data
+    # 1.3.8. Write table data
     def _write_table_data(
         self,
         *,
@@ -748,16 +645,11 @@ class internalGoogleBigqueryLoader:
     ) -> None:
         
         try:
-
-            schema = self.client.get_table(direction).schema
             
-            df = self._enforce_df_schema(df, schema)
-
             print(
                 "🔍 [PLUGIN] Writing data into Google BigQuery table "
                 f"{direction} using default WRITE_APPEND mode..."
             )
-
 
             job = self.client.load_table_from_dataframe(
                 df,
@@ -766,7 +658,7 @@ class internalGoogleBigqueryLoader:
                     write_disposition="WRITE_APPEND"
                 ),
             )
-
+            
             job.result()
             
             written_rows = job.output_rows or 0
