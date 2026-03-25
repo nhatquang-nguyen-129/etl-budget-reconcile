@@ -3,7 +3,10 @@ from pathlib import Path
 ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
-from datetime import date
+from datetime import (
+    date,
+    datetime
+)
 import pandas as pd
 import uuid
 
@@ -236,14 +239,59 @@ class internalGoogleBigqueryLoader:
                     
                     non_null = series.dropna()
 
-                    if not non_null.empty and non_null.map(type).eq(date).all():
+                    if non_null.empty:
                         
-                        bq_type = "DATE"
-                    
-                    else:
-                    
                         bq_type = "STRING"
 
+                    else:
+                        
+                        sample = non_null.head(50)
+
+                        if sample.map(type).eq(date).all():
+                            
+                            bq_type = "DATE"
+
+                        elif sample.map(lambda x: isinstance(x, (datetime, pd.Timestamp))).all():
+                            
+                            if sample.map(lambda x: x.hour == 0 and x.minute == 0 and x.second == 0).all():
+                            
+                                bq_type = "DATE"
+                            
+                            else:
+                            
+                                bq_type = "TIMESTAMP"
+
+                        elif sample.map(lambda x: isinstance(x, str)).all():
+
+                            try:
+                                
+                                sample.astype(int)
+                                
+                                bq_type = "INT64"
+
+                            except:
+                                
+                                try:
+                                
+                                    sample.astype(float)
+                                
+                                    bq_type = "FLOAT64"
+
+                                except:
+                                
+                                    try:
+                                
+                                        pd.to_datetime(sample, errors="raise")
+                                
+                                        bq_type = "TIMESTAMP"
+                                
+                                    except:
+                                
+                                        bq_type = "STRING"
+
+                        else:
+                            bq_type = "STRING"
+                
                 print(
                     f"✅ [PLUGIN] Successfully inferred schema for column "
                     f"{col} from dtype "
@@ -446,7 +494,7 @@ class internalGoogleBigqueryLoader:
                     return
 
                 try:
-
+                    
                     if bq_type == "INT64":
 
                         values = [int(v) for v in values]
@@ -457,7 +505,11 @@ class internalGoogleBigqueryLoader:
 
                     elif bq_type == "BOOL":
 
-                        values = [bool(v) for v in values]
+                        values = [
+                            v if isinstance(v, bool)
+                            else str(v).lower() in ["true", "1"]
+                            for v in values
+                        ]
 
                     elif bq_type == "STRING":
 
@@ -466,13 +518,16 @@ class internalGoogleBigqueryLoader:
                     elif bq_type == "DATE":
 
                         values = [
-                            v.isoformat() if hasattr(v, "isoformat") else str(v)
+                            pd.to_datetime(v).date()
                             for v in values
                         ]
 
                     elif bq_type == "TIMESTAMP":
 
-                        values = [pd.Timestamp(v) for v in values]
+                        values = [
+                            pd.Timestamp(v).to_pydatetime()
+                            for v in values
+                        ]
 
                 except Exception as e:
 
