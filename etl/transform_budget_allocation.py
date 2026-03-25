@@ -122,36 +122,38 @@ def transform_budget_allocation(
 
         df["year"] = (
             pd.to_datetime(
-            df["month"] + "-01",
-            errors="coerce"
+                df["month"] + "-01",
+                errors="coerce"
             )
-        .dt
-        .year
-        .fillna(0)
-        .astype("Int64")
+            .dt.year
+            .fillna(0)
+            .astype("Int64")
         )
 
         df["start_date"] = pd.to_datetime(
             df["start_date"], errors="coerce"
-        ).dt.tz_localize(ZoneInfo("Asia/Ho_Chi_Minh"))
+        ).dt.normalize().dt.date
 
         df["end_date"] = pd.to_datetime(
             df["end_date"], errors="coerce"
-        ).dt.tz_localize(ZoneInfo("Asia/Ho_Chi_Minh"))       
+        ).dt.normalize().dt.date
 
         df["total_effective_time"] = (
             (
-                df["end_date"] - df["start_date"]
+                pd.to_datetime(df["end_date"])
+                - pd.to_datetime(df["start_date"])
             )
             .dt.days
             .fillna(0)
-            .astype("Int64")        
+            .astype("Int64")
         )
 
         df["total_passed_time"] = (
             (
-                pd.Timestamp.now(tz=ZoneInfo("Asia/Ho_Chi_Minh")).normalize()
-                - df["start_date"]
+                pd.Timestamp.now(tz="Asia/Ho_Chi_Minh")
+                .normalize()
+                .tz_localize(None)
+                - pd.to_datetime(df["start_date"])
             )
             .dt.days
             .fillna(0)

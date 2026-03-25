@@ -192,37 +192,119 @@ class internalGoogleBigqueryLoader:
 
     # 1.3.4. Infer DataFrame schema
     @staticmethod
-    def _infer_table_schema(df: pd.DataFrame) -> list[bigquery.SchemaField]:
-        
+    def _infer_df_schema(df: pd.DataFrame) -> list[bigquery.SchemaField]:
+
         schema = []
-        
-        for col, dtype in df.dtypes.items():
-        
+
+        for col in df.columns:
+            
+            series = df[col]
+
+            dtype = series.dtype
+
             if pd.api.types.is_integer_dtype(dtype):
-        
+
                 bq_type = "INT64"
-        
+
             elif pd.api.types.is_float_dtype(dtype):
-        
+
                 bq_type = "FLOAT64"
-        
+
             elif pd.api.types.is_bool_dtype(dtype):
-        
+
                 bq_type = "BOOL"
-        
+
             elif pd.api.types.is_datetime64_any_dtype(dtype):
-        
+
                 bq_type = "TIMESTAMP"
-        
+
             else:
-        
+
+                sample = series.dropna().head(100)
+
                 bq_type = "STRING"
 
+                if not sample.empty:
+
+                    # Check for numeric type
+                    try:
+
+                        parsed = pd.to_numeric(sample, errors="raise")
+
+                        if (parsed % 1 == 0).all():
+
+                            bq_type = "INT64"
+
+                        else:
+
+                            bq_type = "FLOAT64"
+
+                    except:
+
+                        pass
+
+                    # Check for datetime only if string looks like datetime
+                    try:
+                        
+                        parsed = pd.to_datetime(sample, errors="raise")
+
+                        has_time = not all(
+                            (parsed.dt.hour == 0)
+                            & (parsed.dt.minute == 0)
+                            & (parsed.dt.second == 0)
+                        )
+
+                        bq_type = "TIMESTAMP" if has_time else "DATE"
+
+                    except:
+                        
+                        pass
+
             schema.append(bigquery.SchemaField(col, bq_type))
-        
+
         return schema
 
-    # 1.3.5. Check table existence
+    # 1.3.5. Enforce DataFrame schema
+    @staticmethod
+    def _enforce_df_schema(
+        df: pd.DataFrame,
+        schema: list[bigquery.SchemaField]
+    ) -> pd.DataFrame:
+
+        for field in schema:
+            
+            col = field.name
+
+            if col not in df.columns:
+            
+                continue
+
+            if field.field_type == "INT64":
+            
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
+
+            elif field.field_type == "FLOAT64":
+            
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+
+            elif field.field_type == "BOOL":
+            
+                df[col] = df[col].astype("boolean")
+
+            elif field.field_type == "TIMESTAMP":
+            
+                df[col] = pd.to_datetime(df[col], errors="coerce")
+
+            elif field.field_type == "DATE":
+                
+                df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
+
+            else:
+                df[col] = df[col].astype("string")
+
+        return df
+
+    # 1.3.6. Check table existence
     def _check_table_exist(
             self, 
             direction: str
@@ -232,7 +314,7 @@ class internalGoogleBigqueryLoader:
             
             print(
                 "🔍 [PLUGIN] Validating Google BigQuery table " 
-                "f{direction} existence..."
+                f"{direction} existence..."
             )
             
             self._init_client(direction)
@@ -255,7 +337,7 @@ class internalGoogleBigqueryLoader:
             
             return False
 
-    # 1.3.6. Create new table
+    # 1.3.7. Create new table
     def _create_new_table(
         self,
         *,
@@ -276,7 +358,7 @@ class internalGoogleBigqueryLoader:
 
             table = bigquery.Table(
                 direction,
-                schema=self._infer_table_schema(df),
+                schema=self._infer_df_schema(df),
             )
 
             if partition:
@@ -305,7 +387,7 @@ class internalGoogleBigqueryLoader:
                 f"{str(e)}."
             )
 
-    # 1.3.7. Handle table conflict
+    # 1.3.8. Handle table conflict
     def _handle_table_conflict(
         self,
         *,
@@ -370,6 +452,13 @@ class internalGoogleBigqueryLoader:
                 
                 return
 
+            schema = self.client.get_table(direction).schema
+
+            df_to_delete = self._enforce_df_schema(
+                df_to_delete.copy(),
+                schema
+            )
+
         # Single delete using parameterized query
             if len(keys) == 1:
                 
@@ -377,30 +466,19 @@ class internalGoogleBigqueryLoader:
                 
                 series = df_to_delete[key]
                 
-                values = series.tolist()
-
-                if not values:
+                if series.dropna().empty:
+                
                     return
 
-                if pd.api.types.is_datetime64_any_dtype(series):
+                field_map = {f.name: f.field_type for f in schema}
+
+                bq_type = field_map.get(key, "STRING")
+                
+                values = df_to_delete[key].dropna().tolist()
+
+                if not values:
                     
-                    bq_type = "TIMESTAMP"
-                
-                elif pd.api.types.is_integer_dtype(series):
-                
-                    bq_type = "INT64"
-                
-                elif pd.api.types.is_float_dtype(series):
-                
-                    bq_type = "FLOAT64"
-                
-                elif pd.api.types.is_bool_dtype(series):
-                
-                    bq_type = "BOOL"
-                
-                else:
-                
-                    bq_type = "STRING"
+                    return
 
                 query_check_exist = f"""
                     SELECT DISTINCT {key}
@@ -476,18 +554,6 @@ class internalGoogleBigqueryLoader:
                 f"{project}.{dataset}._tmp_delete_keys_"
                 f"{uuid.uuid4().hex[:8]}"
             )
-
-            for k in keys:
-            
-                if df_to_delete[k].dtype != df[k].dtype:
-            
-                    raise TypeError(
-                        "❌ [PLUGIN] Failed to delete existing records in Google BigQuery table "
-                        f"{direction} due to dtype mismatch on key "
-                        f"{k} with "
-                        f"{df_to_delete[k].dtype} in temporary table versus "
-                        f"{df[k].dtype} in direction."
-                    )
 
             self.client.load_table_from_dataframe(
                 df_to_delete,
@@ -586,7 +652,7 @@ class internalGoogleBigqueryLoader:
             f"{mode}."
         )
     
-    # 1.3.8. Write table data
+    # 1.3.9. Write table data
     def _write_table_data(
         self,
         *,
@@ -595,11 +661,16 @@ class internalGoogleBigqueryLoader:
     ) -> None:
         
         try:
+
+            schema = self.client.get_table(direction).schema
             
+            df = self._enforce_df_schema(df, schema)
+
             print(
                 "🔍 [PLUGIN] Writing data into Google BigQuery table "
                 f"{direction} using default WRITE_APPEND mode..."
             )
+
 
             job = self.client.load_table_from_dataframe(
                 df,
