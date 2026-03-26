@@ -83,24 +83,18 @@ def transform_budget_allocation(
 
             is_null = cleaned.isna() | (cleaned == "")
 
-            valid_format_pattern = re.compile(r"""
-                ^\d+$ |                         # 1000000
-                ^\d{1,3}(,\d{3})+$ |            # 1,000,000
-                ^\d{1,3}(\.\d{3})+$             # 1.000.000
-            """, re.VERBOSE)
-
-            double_format_pattern = re.compile(r"""
-                ^\d{1,3}(,\d{3})+\.\d+$ |       # 1,000.000
-                ^\d{1,3}(\.\d{3})+,\d+$         # 1.000,000
-            """, re.VERBOSE)
+            has_comma = cleaned.str.contains(",", regex=False)
+            
+            has_dot = cleaned.str.contains(".", regex=False)
 
             is_double_format = (
                 ~is_null &
-                cleaned.str.match(double_format_pattern)
+                has_comma &
+                has_dot
             )
 
             if is_double_format.any():
-                
+
                 samples = cleaned[is_double_format].head(5).tolist()
 
                 raise ValueError(
@@ -109,9 +103,17 @@ def transform_budget_allocation(
                     f"{samples} due to this column contains double format values mixed thousand/decimal separators which may be valid float but INVALID for integer-only budget."
                 )
 
+            normalized = (
+                cleaned
+                .str.replace(",", "", regex=False)
+                .str.replace(".", "", regex=False)
+            )
+
+            is_numeric = normalized.str.match(r"^-?\d+$")
+
             is_invalid_format = (
                 ~is_null &
-                ~cleaned.str.match(valid_format_pattern)
+                ~is_numeric
             )
 
             if is_invalid_format.any():
@@ -123,10 +125,6 @@ def transform_budget_allocation(
                     f"{col} with sample "
                     f"{samples} due to this column contains invalid numeric format."
                 )
-
-            normalized = cleaned.str.replace(",", "", regex=False)
-
-            normalized = normalized.str.replace(".", "", regex=False)
 
             numeric = pd.to_numeric(normalized, errors="raise")
 

@@ -192,7 +192,7 @@ class internalGoogleBigqueryLoader:
                 "❌ [PLUGIN] Failed to create Google BigQuery dataset "
                 f"{full_dataset_id} due to "
                 f"{str(e)}."
-            )
+            )  
 
     # 1.3.4. Infer DataFrame schema
     @staticmethod
@@ -263,9 +263,11 @@ class internalGoogleBigqueryLoader:
 
                         elif sample.map(lambda x: isinstance(x, str)).all():
 
+                            sample_str = sample.astype(str).str.strip()
+
                             try:
                                 
-                                sample.astype(int)
+                                sample_str.astype(int)
                                 
                                 bq_type = "INT64"
 
@@ -273,20 +275,24 @@ class internalGoogleBigqueryLoader:
                                 
                                 try:
                                 
-                                    sample.astype(float)
+                                    sample_str.astype(float)
                                 
                                     bq_type = "FLOAT64"
 
                                 except:
-                                
-                                    try:
-                                
-                                        pd.to_datetime(sample, errors="raise")
-                                
+                                    
+                                    if sample_str.str.match(r"^\d{4}-\d{2}-\d{2}$").all():
+                                        
+                                        bq_type = "DATE"
+
+                                    elif sample_str.str.match(
+                                        r"^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}:\d{2})$"
+                                    ).all():
+                                        
                                         bq_type = "TIMESTAMP"
-                                
-                                    except:
-                                
+
+                                    else:
+                                        
                                         bq_type = "STRING"
 
                         else:
