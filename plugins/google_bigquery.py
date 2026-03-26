@@ -297,7 +297,7 @@ class internalGoogleBigqueryLoader:
 
                         else:
                             bq_type = "STRING"
-                
+
                 print(
                     f"✅ [PLUGIN] Successfully inferred schema for column "
                     f"{col} from dtype "
