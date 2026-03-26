@@ -199,7 +199,7 @@ class internalGoogleBigqueryLoader:
     def _infer_df_schema(df: pd.DataFrame) -> list[bigquery.SchemaField]:
 
         print(
-            "🔄 [PLUGIN] Inferring DataFrame schema for..."
+            "🔄 [PLUGIN] Inferring DataFrame schema for "
             f"{len(df)} row(s)..."
         )
 

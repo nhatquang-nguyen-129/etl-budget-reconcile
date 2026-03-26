@@ -4,6 +4,7 @@ ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
 import pandas as pd
+import re
 
 def transform_budget_allocation(
     df: pd.DataFrame
@@ -66,31 +67,70 @@ def transform_budget_allocation(
                 f"{missing} then transformation will be suspended."
             )
         
-    # Safe cast numeric columns
+    # Transform numeric columns
         for col in [
             "initial_budget",
             "adjusted_budget",
             "additional_budget",
         ]:
-            
-            df[col] = (
-                df[col]
-                .astype(str)
-                .str.replace(",", "", regex=False)
+
+            series = df[col]
+
+            cleaned = (
+                series.astype("string")
                 .str.strip()
             )
 
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+            is_null = cleaned.isna() | (cleaned == "")
 
-            null_count = df[col].isna().sum()
-            if null_count > 0:
-                print(
-                    "⚠️ [TRANSFORM] Failed to transform column "
-                    f"{col} due to this column has "
-                    f"{null_count} NaN after numeric conversion."
+            valid_format_pattern = re.compile(r"""
+                ^\d+$ |                         # 1000000
+                ^\d{1,3}(,\d{3})+$ |            # 1,000,000
+                ^\d{1,3}(\.\d{3})+$             # 1.000.000
+            """, re.VERBOSE)
+
+            double_format_pattern = re.compile(r"""
+                ^\d{1,3}(,\d{3})+\.\d+$ |       # 1,000.000
+                ^\d{1,3}(\.\d{3})+,\d+$         # 1.000,000
+            """, re.VERBOSE)
+
+            is_double_format = (
+                ~is_null &
+                cleaned.str.match(double_format_pattern)
+            )
+
+            if is_double_format.any():
+                
+                samples = cleaned[is_double_format].head(5).tolist()
+
+                raise ValueError(
+                    "❌ [TRANSFORM] Failed to transform numeric column "
+                    f"{col} with sample "
+                    f"{samples} due to this column contains double format values mixed thousand/decimal separators which may be valid float but INVALID for integer-only budget."
                 )
 
-            df[col] = df[col].fillna(0).round(0).astype("Int64")
+            is_invalid_format = (
+                ~is_null &
+                ~cleaned.str.match(valid_format_pattern)
+            )
+
+            if is_invalid_format.any():
+
+                samples = cleaned[is_invalid_format].head(5).tolist()
+
+                raise ValueError(
+                    "❌ [TRANSFORM] Failed to transform numeric column "
+                    f"{col} with sample "
+                    f"{samples} due to this column contains invalid numeric format."
+                )
+
+            normalized = cleaned.str.replace(",", "", regex=False)
+
+            normalized = normalized.str.replace(".", "", regex=False)
+
+            numeric = pd.to_numeric(normalized, errors="raise")
+
+            df[col] = numeric.fillna(0).astype("Int64")
 
     # Transform derived columns
         df["actual_budget"] = (
