@@ -28,7 +28,7 @@ def extract_budget_allocation(
     ---
     Returns:
         1. pandas.DataFrame:
-            Flattened budget allocation DataFrame
+            Flattened budget allocation records
     """
 
     # Initialize Gspread client
