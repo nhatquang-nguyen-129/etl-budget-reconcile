@@ -282,6 +282,7 @@ class internalGoogleBigqueryLoader:
                             sample_str = sample_str.replace("", pd.NA).dropna()
 
                             if sample_str.empty:
+                                
                                 bq_type = "STRING"
 
                             else:
