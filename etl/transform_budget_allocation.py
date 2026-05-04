@@ -20,7 +20,7 @@ def transform_budget_allocation(
     ---
     Returns:
         1. pandas.DataFrame:
-            Enforced budget allocation DataFrame
+            Transformed Budget Allocation DataFrame
     """
 
     print(
@@ -34,7 +34,7 @@ def transform_budget_allocation(
         if df.empty:
             
             print(
-                "⚠️ [TRANSFORM] Empty Budget Allocation input then transformation will be suspended."
+                "⚠️ [TRANSFORM] Empty Budget Allocation input DataFrame then transformation will be suspended."
             )
             
             return df
