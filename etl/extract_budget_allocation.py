@@ -28,7 +28,7 @@ def extract_budget_allocation(
     ---
     Returns:
         1. pandas.DataFrame:
-            Flattened budget allocation DataFrame
+            Flattened budget allocation records
     """
 
     # Initialize Gspread client
@@ -65,8 +65,8 @@ def extract_budget_allocation(
     try:
         
         print(
-            "🔍 [EXTRACT] Extracting Budget Allocation in worksheet_name "
-            f"{worksheet_name} from spreadsheet_id "
+            "🔍 [EXTRACT] Extracting Budget Allocation from worksheet_name "
+            f"{worksheet_name} in spreadsheet_id "
             f"{spreadsheet_id}..."
         )
         
@@ -80,7 +80,8 @@ def extract_budget_allocation(
         
             print(
                 "⚠️ [EXTRACT] Completely extracted Budget Allocation from worksheet_name "
-                f"{worksheet_name} but empty DataFrame returned."
+                f"{worksheet_name} in spreadsheet_id "
+                f"{spreadsheet_id} but empty DataFrame returned."
             )
         
             return pd.DataFrame()
@@ -120,7 +121,8 @@ def extract_budget_allocation(
 
         print(
             "✅ [EXTRACT] Successfully extracted Budget Allocation from worksheet_name "
-            f"{worksheet_name} with "
+            f"{worksheet_name} in spreadsheet_id "
+            f"{spreadsheet_id} with "
             f"{len(df)} row(s) and "
             f"{len(df.columns)} column(s)."
         )
@@ -131,8 +133,8 @@ def extract_budget_allocation(
     except WorksheetNotFound as e:
         
         error = RuntimeError(
-            "❌ [EXTRACT] Failed to extract Budget Allocation due to worksheet "
-            f"{worksheet_name} does not exist in spreadsheet "
+            "❌ [EXTRACT] Failed to extract Budget Allocation due to worksheet_name "
+            f"{worksheet_name} does not exist in spreadsheet_id "
             f"{spreadsheet_id}."
         )
         
@@ -144,7 +146,9 @@ def extract_budget_allocation(
     except RefreshError as e:
         
         error = RuntimeError(
-            "❌ [EXTRACT] Failed to extract Budget Allocation due to unauthorized Google credentials then manual re-authentication is required."
+            "❌ [EXTRACT] Failed to extract Budget Allocation from worksheet_name "
+            f"{worksheet_name} in spreadsheet_id "
+            f"{spreadsheet_id} due to unauthorized Google credentials then manual re-authentication is required."
         )
 
         error.retryable = False
@@ -165,8 +169,9 @@ def extract_budget_allocation(
         }:            
             
             error = RuntimeError(
-                "⚠️ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-                f"{worksheet_name} due to API error "
+                "⚠️ [EXTRACT] Failed to extract Budget Allocation from worksheet_name "
+                f"{worksheet_name} in spreadsheet_id "
+                f"{spreadsheet_id} due to API error "
                 f"{e} with HTTP request status "
                 f"{status} then this request is eligible to retry."
             )
@@ -182,8 +187,9 @@ def extract_budget_allocation(
         }:
 
             error = RuntimeError(               
-                "❌ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-                f"{worksheet_name} due to unauthorized access error "
+                "❌ [EXTRACT] Failed to extract Budget Allocation from worksheet_name "
+                f"{worksheet_name} in spreadsheet_id "
+                f"{spreadsheet_id} due to unauthorized access error "
                 f"{e} then this request is not eligible to retry."
             )
 
@@ -193,8 +199,9 @@ def extract_budget_allocation(
 
     # Non-retryable API error
         error = RuntimeError(
-            "❌ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-            f"{worksheet_name} due to API error "
+            "❌ [EXTRACT] Failed to extract Budget Allocation from worksheet_name "
+            f"{worksheet_name} in spreadsheet_id "
+            f"{spreadsheet_id} due to API error "
             f"{e} with HTTP request status "
             f"{status} then this request is not eligible to retry."
         )
@@ -207,8 +214,9 @@ def extract_budget_allocation(
     except requests.exceptions.Timeout as e:
 
         error = RuntimeError(
-            "⚠️ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-            f"{worksheet_name} due to request timeout error "
+            "⚠️ [EXTRACT] Failed to extract Budget Allocation from worksheet_name "
+            f"{worksheet_name} in spreadsheet_id "
+            f"{spreadsheet_id} due to request timeout error "
             f"{e} then this request is eligible to retry."
         )
 
@@ -220,8 +228,9 @@ def extract_budget_allocation(
     except requests.exceptions.ConnectionError as e:
 
         error = RuntimeError(
-            "⚠️ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-            f"{worksheet_name} due to request connection error "
+            "⚠️ [EXTRACT] Failed to extract Budget Allocation from worksheet_name "
+            f"{worksheet_name} in spreadsheet_id "
+            f"{spreadsheet_id} due to request connection error "
             f"{e} then this request is eligible to retry."
         )
 
@@ -233,8 +242,9 @@ def extract_budget_allocation(
     except Exception as e:
 
         error = RuntimeError(
-            "❌ [EXTRACT] Failed to extract Budget Allocation for worksheet_name "
-            f"{worksheet_name} due to "
+            "❌ [EXTRACT] Failed to extract Budget Allocation from worksheet_name "
+            f"{worksheet_name} in spreadsheet_id "
+            f"{spreadsheet_id} due to "
             f"{e}."
         )
 

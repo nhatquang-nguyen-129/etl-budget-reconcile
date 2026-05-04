@@ -25,5 +25,5 @@ $env:COMPANY="your-company-in-short"
 $env:DEPARTMENT="your-department"
 $env:ACCOUNT="your-account"
 
-python backfill.py --input_month YYYY-MM
+python -m backfill.backfill_budget_reconcile --input_month=YYYY-MM
 ```

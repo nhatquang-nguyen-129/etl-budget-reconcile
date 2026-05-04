@@ -22,7 +22,7 @@ class internalGoogleBigqueryLoader:
         2. Check dataset existence
         3. Check table existence
         4. Apply INSERT/UPSERT DML
-        5. Writer data into table
+        5. Write data into table
     ---
     Returns:
         None
@@ -206,7 +206,7 @@ class internalGoogleBigqueryLoader:
         schema = []
 
         for col in df.columns:
-            
+
             series = df[col]
             
             dtype = series.dtype
@@ -218,7 +218,7 @@ class internalGoogleBigqueryLoader:
             )
 
             try:
-                
+
                 if pd.api.types.is_integer_dtype(dtype):
                     
                     bq_type = "INT64"
@@ -240,62 +240,80 @@ class internalGoogleBigqueryLoader:
                     non_null = series.dropna()
 
                     if non_null.empty:
-                        
+                    
                         bq_type = "STRING"
 
                     else:
                         
-                        sample = non_null.head(50)
-
-                        if sample.map(type).eq(date).all():
+                        # Get random DataFrame sample
+                        if len(non_null) <= 200:
                             
+                            sample = non_null
+                        
+                        else:
+                        
+                            head_sample = non_null.head(50)
+                        
+                            tail_sample = non_null.tail(50)
+                        
+                            random_sample = non_null.sample(n=100, random_state=42)
+                        
+                            sample = pd.concat([head_sample, tail_sample, random_sample])
+
+                        if sample.map(lambda x: isinstance(x, date) and not isinstance(x, datetime)).all():
+
                             bq_type = "DATE"
 
                         elif sample.map(lambda x: isinstance(x, (datetime, pd.Timestamp))).all():
-                            
+
                             if sample.map(lambda x: x.hour == 0 and x.minute == 0 and x.second == 0).all():
-                            
+
                                 bq_type = "DATE"
-                            
+
                             else:
-                            
+
                                 bq_type = "TIMESTAMP"
 
+                        # String handling
                         elif sample.map(lambda x: isinstance(x, str)).all():
 
                             sample_str = sample.astype(str).str.strip()
 
-                            try:
-                                
-                                sample_str.astype(int)
-                                
-                                bq_type = "INT64"
+                            sample_str = sample_str.replace("", pd.NA).dropna()
 
-                            except:
+                            if sample_str.empty:
                                 
-                                try:
-                                
-                                    sample_str.astype(float)
-                                
-                                    bq_type = "FLOAT64"
+                                bq_type = "STRING"
 
-                                except:
-                                    
-                                    if sample_str.str.match(r"^\d{4}-\d{2}-\d{2}$").all():
+                            else:
+
+                                if sample_str.str.match(r"^\d{4}-\d{2}-\d{2}$").all():
+
+                                    bq_type = "DATE"
+
+                                elif sample_str.str.match(r"^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}:\d{2})$").all():
+
+                                    bq_type = "TIMESTAMP"
+
+                                else:
+
+                                    # Infer FLOAT if explicit decimal pattern
+                                    if sample_str.str.contains(r"\.").any():
                                         
-                                        bq_type = "DATE"
-
-                                    elif sample_str.str.match(
-                                        r"^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}:\d{2})$"
-                                    ).all():
+                                        try:
                                         
-                                        bq_type = "TIMESTAMP"
-
+                                            sample_str.astype(float)
+                                        
+                                            bq_type = "FLOAT64"
+                                        
+                                        except:
+                                        
+                                            bq_type = "STRING"
                                     else:
                                         
                                         bq_type = "STRING"
-
                         else:
+
                             bq_type = "STRING"
 
                 print(
@@ -305,14 +323,14 @@ class internalGoogleBigqueryLoader:
                     f"{bq_type}."
                 )
 
-                schema.append(bigquery.SchemaField(
-                    col, 
-                    bq_type
+                schema.append(
+                    bigquery.SchemaField(
+                        col, 
+                        bq_type
                     )
                 )
 
             except Exception as e:
-                
                 raise RuntimeError(
                     "❌ [PLUGIN] Failed to infer schema for column "
                     f"{col} with dtype "
@@ -324,7 +342,7 @@ class internalGoogleBigqueryLoader:
             "✅ [PLUGIN] Successfully inferred DataFrame schema for "
             f"{len(df)} row(s)."
         )
-        
+
         return schema
 
     # 1.3.5. Check table existence

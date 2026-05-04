@@ -58,4 +58,10 @@
 
 - The loader uses `mode="upsert"` and `keys=["month"]` to delete existing records
 
+- The loader uses primary key(s) defined in `keys=[...]` to overwrite existing matching records
+
+- The loader delegates execution to `internalGoogleBigqueryLoader` for standardized BigQuery operations
+
+- The loader uses keys=["month"] to deduplicate campaign insights records at monthly granularity
+
 - The loader applies table clustering on `cluster=["month"]` to improve query performance
