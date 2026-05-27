@@ -39,6 +39,8 @@ select
     cast(null as string)  as region,
 
     cast(null as string)  as category_level_1,
+    cast(null as string)  as optimization,
+
     cast(null as string)  as track,
     cast(null as string)  as pillar,
     cast(null as string)  as `group`,
@@ -63,6 +65,8 @@ with union_campaign as (
         region,
 
         category_level_1,
+        optimization,
+
         track,
         pillar,
         `group`,
@@ -88,6 +92,8 @@ select
     region,
 
     category_level_1,
+    optimization,
+
     track,
     pillar,
     `group`,
@@ -112,6 +118,7 @@ group by
     budget_group,
     region,
     category_level_1,
+    optimization,
     track,
     pillar,
     `group`,
