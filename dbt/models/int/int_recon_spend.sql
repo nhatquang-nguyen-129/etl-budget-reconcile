@@ -10,14 +10,15 @@ with spend as (
     select
         budget_group,
         region,
-
         category_level_1,
+
         track,
         pillar,
         `group`,
 
         platform,
         objective,
+        optimization,
 
         month,
         year,
@@ -43,6 +44,7 @@ budget as (
 
         platform,
         objective,
+        optimization,
 
         month,
         year,
@@ -74,6 +76,7 @@ select
     coalesce(b.region, s.region)                     as region,
 
     coalesce(b.category_level_1, s.category_level_1) as category_level_1,
+    coalesce(b.optimization, s.optimization)         as optimization,
     coalesce(b.track, s.track)                       as track,
     coalesce(b.pillar, s.pillar)                     as pillar,
     coalesce(b.`group`, s.`group`)                   as `group`,
@@ -206,6 +209,7 @@ full outer join spend s
     on  b.budget_group     = s.budget_group
     and b.region           = s.region
     and b.category_level_1 = s.category_level_1
+    and b.optimization     = s.optimization
     and b.track            = s.track
     and b.pillar           = s.pillar
     and b.`group`          = s.`group`
