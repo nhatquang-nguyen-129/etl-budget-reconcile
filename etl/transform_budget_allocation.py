@@ -52,6 +52,7 @@ def transform_budget_allocation(
             "end_date",
             "platform",
             "objective",
+            "optimization",
             "initial_budget",
             "adjusted_budget",
             "additional_budget",
