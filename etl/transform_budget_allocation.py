@@ -93,26 +93,11 @@ def transform_budget_allocation(
 
     except Exception as e:
 
-        print(
-            "🚨 [TRANSFORM][VALIDATE][EXCEPT] Exception captured"
-        )
-
-        print(
-            f"🚨 [TRANSFORM][VALIDATE][EXCEPT] Type = {type(e).__name__}"
-        )
-
-        print(
-            f"🚨 [TRANSFORM][VALIDATE][EXCEPT] Message = {e}"
-        )
-
-        import traceback
-
         traceback.print_exc()
 
         raise RuntimeError(
-            "❌ [TRANSFORM][VALIDATE] Failed to validate Budget Allocation.\n"
-            f"Error Type: {type(e).__name__}\n"
-            f"Error Message: {str(e)}"
+            "❌ [TRANSFORM][VALIDATE] Failed to validate column(s) for Budget Allocation due to "
+            f"{str(e)}."
         ) from e
             
 # Normalize numeric columns
