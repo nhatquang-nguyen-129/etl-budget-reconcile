@@ -4,6 +4,7 @@ ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
 import pandas as pd
+import traceback
 
 def transform_budget_allocation(
     df: pd.DataFrame
@@ -23,22 +24,31 @@ def transform_budget_allocation(
             Transformed Budget Allocation DataFrame
     """
 
-    print(
-        "🔄 [TRANSFORM] Transforming "
-        f"{len(df)} row(s) of Budget Allocation..."
-    )
-
     try:
-        
-    # Validate input
+
+        print(
+            "🔄 [TRANSFORM] Validating column(s) for "
+            f"{len(df)} row(s) of Budget Allocation..."
+        )
+
+        print(
+            "🔍 [TRANSFORM][VALIDATE][STEP 1] Enter validate block"
+        )
+
         if df.empty:
-            
+
             print(
-                "⚠️ [TRANSFORM] Empty Budget Allocation input DataFrame then transformation will be suspended."
+                "🔍 [TRANSFORM][VALIDATE][STEP 2] DataFrame is empty"
             )
-            
-            return df
-        
+
+            raise ValueError(
+                "❌ [TRANSFORM] Failed to validate column(s) for Budget Allocation due to empty input DataFrame."
+            )
+
+        print(
+            "🔍 [TRANSFORM][VALIDATE][STEP 3] DataFrame not empty"
+        )
+
         required_cols = {
             "budget_group",
             "category_level_1",
@@ -58,155 +68,245 @@ def transform_budget_allocation(
             "additional_budget",
         }
 
-        missing = required_cols - set(df.columns)
-        
-        if missing:
-        
-            raise ValueError(
-                "❌ [TRANSFORM] Failed to transform Budget Allocation due to missing columns "
-                f"{missing} then transformation will be suspended."
-            )
-        
-    # Transform numeric columns
-        for col in [
-            "initial_budget",
-            "adjusted_budget",
-            "additional_budget",
-        ]:
-
-            series = df[col]
-
-            cleaned = (
-                series.astype("string")
-                .str.strip()
-            )
-
-            is_null = cleaned.isna() | (cleaned == "")
-
-            has_comma = cleaned.str.contains(",", regex=False)
-            
-            has_dot = cleaned.str.contains(".", regex=False)
-
-            is_double_format = (
-                ~is_null &
-                has_comma &
-                has_dot
-            )
-
-            if is_double_format.any():
-
-                samples = cleaned[is_double_format].head(5).tolist()
-
-                raise ValueError(
-                    "❌ [TRANSFORM] Failed to transform numeric column "
-                    f"{col} with sample "
-                    f"{samples} due to this column contains double format values mixed thousand/decimal separators which may be valid float but INVALID for integer-only budget."
-                )
-
-            normalized = (
-                cleaned
-                .str.replace(",", "", regex=False)
-                .str.replace(".", "", regex=False)
-            )
-
-            is_numeric = normalized.str.match(r"^-?\d+$")
-
-            is_invalid_format = (
-                ~is_null &
-                ~is_numeric
-            )
-
-            if is_invalid_format.any():
-
-                samples = cleaned[is_invalid_format].head(5).tolist()
-
-                raise ValueError(
-                    "❌ [TRANSFORM] Failed to transform numeric column "
-                    f"{col} with sample "
-                    f"{samples} due to this column contains invalid numeric format."
-                )
-
-            numeric = pd.to_numeric(normalized, errors="raise")
-
-            df[col] = numeric.fillna(0).astype("Int64")
-
-    # Transform derived columns
-        df["actual_budget"] = (
-            df["initial_budget"]
-            + df["adjusted_budget"]
-            + df["additional_budget"]
-        ).astype("Int64")
-
-        df["grouped_marketing_budget"] = (
-            (df["budget_group"] == "KIDS").astype("Int64")
-        ) * df["actual_budget"]
-
-        df["grouped_supplier_budget"] = (
-            (df["budget_group"] == "SUP").astype("Int64")
-        ) * df["actual_budget"]
-
-        df["grouped_store_budget"] = (
-            (df["budget_group"] == "STORE").astype("Int64")
-        ) * df["actual_budget"]
-
-        df["grouped_ecommerce_budget"] = (
-            (df["budget_group"] == "ECOM").astype("Int64")
-        ) * df["actual_budget"]        
-
-        df["grouped_recruitment_budget"] = (
-            (df["budget_group"] == "HR").astype("Int64")
-        ) * df["actual_budget"]
-
-        df["grouped_customer_budget"] = (
-            (df["budget_group"] == "CS").astype("Int64")
-        ) * df["actual_budget"]
-
-        df["grouped_festival_budget"] = (
-            (df["budget_group"] == "FES").astype("Int64")
-        ) * df["actual_budget"]
-
-    # Transform time columns
-        today = pd.Timestamp.now(tz="Asia/Ho_Chi_Minh").date()        
-        
-        df["month"] = df["month"].astype(str).str.strip()
-
-        df["year"] = (
-            pd.to_datetime(df["month"] + "-01", errors="coerce")
-            .dt.year
-            .fillna(0)
-            .astype("Int64")
-        )
-
-        df["start_date"] = pd.to_datetime(
-            df["start_date"], errors="coerce"
-        ).dt.date
-
-        df["end_date"] = pd.to_datetime(
-            df["end_date"], errors="coerce"
-        ).dt.date
-
-        df["total_effective_time"] = (
-            (df["end_date"] - df["start_date"])
-            .apply(lambda x: x.days if pd.notnull(x) else 0)
-            .astype("Int64")
-        )
-
-        df["total_passed_time"] = (
-            (today - df["start_date"])
-            .apply(lambda x: x.days if pd.notnull(x) else 0)
-            .astype("Int64")
+        print(
+            "🔍 [TRANSFORM][VALIDATE][STEP 4] Required columns created"
         )
 
         print(
-            "✅ [TRANSFORM] Successfully transformed "
-            f"{len(df)} row(s) of Budget Allocation."
+            f"🔍 [TRANSFORM][VALIDATE] DataFrame shape: {df.shape}"
         )
 
-        return df
+        print(
+            f"🔍 [TRANSFORM][VALIDATE] Total columns: {len(df.columns)}"
+        )
+
+        print(
+            "🔍 [TRANSFORM][VALIDATE] Actual columns:"
+        )
+
+        for idx, col in enumerate(df.columns):
+
+            print(
+                f"  [{idx}] {repr(col)}"
+            )
+
+        print(
+            "🔍 [TRANSFORM][VALIDATE][STEP 5] Finished printing columns"
+        )
+
+        actual_cols = {
+            str(col).strip()
+            for col in df.columns
+        }
+
+        print(
+            "🔍 [TRANSFORM][VALIDATE][STEP 6] Actual column set created"
+        )
+
+        missing = required_cols - actual_cols
+
+        extra = actual_cols - required_cols
+
+        print(
+            f"🔍 [TRANSFORM][VALIDATE] Missing columns: {sorted(missing)}"
+        )
+
+        print(
+            f"🔍 [TRANSFORM][VALIDATE] Extra columns: {sorted(extra)}"
+        )
+
+        print(
+            f"🔍 [TRANSFORM][VALIDATE] Missing length: {len(missing)}"
+        )
+
+        print(
+            f"🔍 [TRANSFORM][VALIDATE] Missing bool: {bool(missing)}"
+        )
+
+        print(
+            "🔍 [TRANSFORM][VALIDATE][STEP 7] Before missing check"
+        )
+
+        if missing:
+
+            print(
+                "🚨 [TRANSFORM][VALIDATE][STEP 8] About to raise ValueError"
+            )
+
+            raise ValueError(
+                f"Missing required columns: {sorted(missing)}"
+            )
+
+        print(
+            "🔍 [TRANSFORM][VALIDATE][STEP 9] Missing check passed"
+        )
+
+        print(
+            "✅ [TRANSFORM][VALIDATE] Completed."
+        )
 
     except Exception as e:
-        
-        raise RuntimeError(
-            "❌ [TRANSFORM] Failed to transform Budget Allocation due to "
-            f"{e}."
+
+        print(
+            "🚨 [TRANSFORM][VALIDATE][EXCEPT] Exception captured"
         )
+
+        print(
+            f"🚨 [TRANSFORM][VALIDATE][EXCEPT] Type = {type(e).__name__}"
+        )
+
+        print(
+            f"🚨 [TRANSFORM][VALIDATE][EXCEPT] Message = {e}"
+        )
+
+        import traceback
+
+        traceback.print_exc()
+
+        raise RuntimeError(
+            "❌ [TRANSFORM][VALIDATE] Failed to validate Budget Allocation.\n"
+            f"Error Type: {type(e).__name__}\n"
+            f"Error Message: {str(e)}"
+        ) from e
+            
+# Normalize numeric columns
+    for col in [
+        "initial_budget",
+        "adjusted_budget",
+        "additional_budget",
+    ]:
+
+        print(
+            "🔄 [TRANSFORM] Normalizing numeric column "
+            f"{col} Budget Allocation..."
+        )
+
+        series = df[col]
+
+        cleaned = (
+            series.astype("string")
+            .str.strip()
+        )
+
+        is_null = cleaned.isna() | (cleaned == "")
+
+        has_comma = cleaned.str.contains(",", regex=False)
+        
+        has_dot = cleaned.str.contains(".", regex=False)
+
+        is_double_format = (
+            ~is_null &
+            has_comma &
+            has_dot
+        )
+
+        if is_double_format.any():
+
+            samples = cleaned[is_double_format].head(5).tolist()
+
+            raise ValueError(
+                "❌ [TRANSFORM] Failed to transform numeric column "
+                f"{col} with sample "
+                f"{samples} due to this column contains double format values mixed thousand/decimal separators which may be valid float but INVALID for integer-only budget."
+            )
+
+        normalized = (
+            cleaned
+            .str.replace(",", "", regex=False)
+            .str.replace(".", "", regex=False)
+        )
+
+        is_numeric = normalized.str.match(r"^-?\d+$")
+
+        is_invalid_format = (
+            ~is_null &
+            ~is_numeric
+        )
+
+        if is_invalid_format.any():
+
+            samples = cleaned[is_invalid_format].head(5).tolist()
+
+            raise ValueError(
+                "❌ [TRANSFORM] Failed to transform numeric column "
+                f"{col} with sample "
+                f"{samples} due to this column contains invalid numeric format."
+            )
+
+        numeric = pd.to_numeric(normalized, errors="raise")
+
+        df[col] = numeric.fillna(0).astype("Int64")
+
+# Transform derived columns
+    df["actual_budget"] = (
+        df["initial_budget"]
+        + df["adjusted_budget"]
+        + df["additional_budget"]
+    ).astype("Int64")
+
+    df["grouped_marketing_budget"] = (
+        (df["budget_group"] == "KIDS").astype("Int64")
+    ) * df["actual_budget"]
+
+    df["grouped_supplier_budget"] = (
+        (df["budget_group"] == "SUP").astype("Int64")
+    ) * df["actual_budget"]
+
+    df["grouped_store_budget"] = (
+        (df["budget_group"] == "STORE").astype("Int64")
+    ) * df["actual_budget"]
+
+    df["grouped_ecommerce_budget"] = (
+        (df["budget_group"] == "ECOM").astype("Int64")
+    ) * df["actual_budget"]        
+
+    df["grouped_recruitment_budget"] = (
+        (df["budget_group"] == "HR").astype("Int64")
+    ) * df["actual_budget"]
+
+    df["grouped_customer_budget"] = (
+        (df["budget_group"] == "CS").astype("Int64")
+    ) * df["actual_budget"]
+
+    df["grouped_festival_budget"] = (
+        (df["budget_group"] == "FES").astype("Int64")
+    ) * df["actual_budget"]
+
+# Transform time columns
+    today = pd.Timestamp.now(tz="Asia/Ho_Chi_Minh").date()        
+    
+    df["month"] = df["month"].astype(str).str.strip()
+
+    df["year"] = (
+        pd.to_datetime(df["month"] + "-01", errors="coerce")
+        .dt.year
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df["start_date"] = pd.to_datetime(
+        df["start_date"], errors="coerce"
+    ).dt.date
+
+    df["end_date"] = pd.to_datetime(
+        df["end_date"], errors="coerce"
+    ).dt.date
+
+    df["total_effective_time"] = (
+        (df["end_date"] - df["start_date"])
+        .apply(lambda x: x.days if pd.notnull(x) else 0)
+        .astype("Int64")
+    )
+
+    df["total_passed_time"] = (
+        (today - df["start_date"])
+        .apply(lambda x: x.days if pd.notnull(x) else 0)
+        .astype("Int64")
+    )
+
+    print(
+        "✅ [TRANSFORM] Successfully transformed "
+        f"{len(df)} row(s) of Budget Allocation."
+    )
+
+    return df

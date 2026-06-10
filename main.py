@@ -6,6 +6,7 @@ sys.path.append(str(ROOT_FOLDER_LOCATION))
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import traceback
 
 from google.cloud import secretmanager
 from google.api_core.client_options import ClientOptions
@@ -166,11 +167,17 @@ def main():
 
     # Entrypoint
 if __name__ == "__main__":
-    
+
     try:
-    
+
         main()
-    
+
     except Exception:
-    
+
+        print(
+            "❌ [MAIN] Failed to execute Budget Reconciliation main entrypoint due to..."
+        )
+
+        traceback.print_exc()
+
         sys.exit(1)
