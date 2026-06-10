@@ -31,15 +31,7 @@ def transform_budget_allocation(
             f"{len(df)} row(s) of Budget Allocation..."
         )
 
-        print(
-            "🔍 [TRANSFORM][VALIDATE][STEP 1] Enter validate block"
-        )
-
         if df.empty:
-
-            print(
-                "🔍 [TRANSFORM][VALIDATE][STEP 2] DataFrame is empty"
-            )
 
             raise ValueError(
                 "❌ [TRANSFORM] Failed to validate column(s) for Budget Allocation due to empty input DataFrame."
@@ -68,21 +60,6 @@ def transform_budget_allocation(
             "additional_budget",
         }
 
-        print(
-            "🔍 [TRANSFORM][VALIDATE][STEP 4] Required columns created"
-        )
-
-        print(
-            f"🔍 [TRANSFORM][VALIDATE] DataFrame shape: {df.shape}"
-        )
-
-        print(
-            f"🔍 [TRANSFORM][VALIDATE] Total columns: {len(df.columns)}"
-        )
-
-        print(
-            "🔍 [TRANSFORM][VALIDATE] Actual columns:"
-        )
 
         for idx, col in enumerate(df.columns):
 
@@ -90,60 +67,29 @@ def transform_budget_allocation(
                 f"  [{idx}] {repr(col)}"
             )
 
-        print(
-            "🔍 [TRANSFORM][VALIDATE][STEP 5] Finished printing columns"
-        )
-
-        actual_cols = {
+        actual = {
             str(col).strip()
             for col in df.columns
         }
 
-        print(
-            "🔍 [TRANSFORM][VALIDATE][STEP 6] Actual column set created"
-        )
+        missing = required_cols - actual
 
-        missing = required_cols - actual_cols
-
-        extra = actual_cols - required_cols
+        extra = actual - required_cols
 
         print(
-            f"🔍 [TRANSFORM][VALIDATE] Missing columns: {sorted(missing)}"
-        )
-
-        print(
-            f"🔍 [TRANSFORM][VALIDATE] Extra columns: {sorted(extra)}"
-        )
-
-        print(
-            f"🔍 [TRANSFORM][VALIDATE] Missing length: {len(missing)}"
-        )
-
-        print(
-            f"🔍 [TRANSFORM][VALIDATE] Missing bool: {bool(missing)}"
-        )
-
-        print(
-            "🔍 [TRANSFORM][VALIDATE][STEP 7] Before missing check"
+            "🔍 [TRANSFORM] Successfully validated DataFrame for Budget Allocation with "
+            f"{df.shape} shape with total column(s) "
+            f"{len(actual)}/{len(required_cols)} total column including "
+            f"{len(missing)} mising column(s) and "
+            f"{len(extra)} extra column(s)."
         )
 
         if missing:
 
-            print(
-                "🚨 [TRANSFORM][VALIDATE][STEP 8] About to raise ValueError"
-            )
-
             raise ValueError(
-                f"Missing required columns: {sorted(missing)}"
+                f"❌ [TRANSFORM] Failed to transform transform validated DataFrame for Budget Allocation due to missing required column(s) "
+                f"{sorted(missing)}"
             )
-
-        print(
-            "🔍 [TRANSFORM][VALIDATE][STEP 9] Missing check passed"
-        )
-
-        print(
-            "✅ [TRANSFORM][VALIDATE] Completed."
-        )
 
     except Exception as e:
 
