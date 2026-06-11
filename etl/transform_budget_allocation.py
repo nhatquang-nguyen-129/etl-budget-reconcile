@@ -4,6 +4,7 @@ ROOT_FOLDER_LOCATION = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_FOLDER_LOCATION))
 
 import pandas as pd
+import traceback
 
 def transform_budget_allocation(
     df: pd.DataFrame
@@ -23,22 +24,20 @@ def transform_budget_allocation(
             Transformed Budget Allocation DataFrame
     """
 
-    print(
-        "🔄 [TRANSFORM] Transforming "
-        f"{len(df)} row(s) of Budget Allocation..."
-    )
-
-    try:
-        
     # Validate input
+    try:
+
+        print(
+            "🔄 [TRANSFORM] Validating column(s) for "
+            f"{len(df)} row(s) of Budget Allocation..."
+        )
+
         if df.empty:
-            
-            print(
-                "⚠️ [TRANSFORM] Empty Budget Allocation input DataFrame then transformation will be suspended."
-            )
-            
-            return df
-        
+
+            raise ValueError(
+                "❌ [TRANSFORM] Failed to validate column(s) for Budget Allocation due to empty input DataFrame."
+            )    
+
         required_cols = {
             "budget_group",
             "category_level_1",
@@ -58,21 +57,41 @@ def transform_budget_allocation(
             "additional_budget",
         }
 
-        missing = required_cols - set(df.columns)
-        
-        if missing:
-        
+        actual_cols = {
+            str(col).strip()
+            for col in df.columns
+        }
+
+        missing_cols = required_cols - actual_cols
+
+        extra_cols = actual_cols - required_cols
+
+        print(
+            "✅ [TRANSFORM] Successfully validated DataFrame for Budget Allocation with "
+            f"{df.shape} shape with total column(s) "
+            f"{len(actual_cols)}/{len(required_cols)} total column including "
+            f"{len(missing_cols)} mising column(s) and "
+            f"{len(extra_cols)} extra column(s)."
+        )
+
+        if missing_cols:
+
             raise ValueError(
-                "❌ [TRANSFORM] Failed to transform Budget Allocation due to missing columns "
-                f"{missing} then transformation will be suspended."
+                f"❌ [TRANSFORM] Failed to transform validated DataFrame for Budget Allocation due to missing required column(s) "
+                f"{sorted(missing_cols)}"
             )
-        
-    # Transform numeric columns
+
+    # Normalize numeric columns        
         for col in [
             "initial_budget",
             "adjusted_budget",
             "additional_budget",
         ]:
+
+            print(
+                "🔄 [TRANSFORM] Normalizing numeric column "
+                f"{col} from validated DataFrame of Budget Allocation..."
+            )
 
             series = df[col]
 
@@ -128,7 +147,7 @@ def transform_budget_allocation(
 
             numeric = pd.to_numeric(normalized, errors="raise")
 
-            df[col] = numeric.fillna(0).astype("Int64")
+            df[col] = numeric.fillna(0).astype("Int64")        
 
     # Transform derived columns
         df["actual_budget"] = (
@@ -205,8 +224,11 @@ def transform_budget_allocation(
         return df
 
     except Exception as e:
-        
-        raise RuntimeError(
-            "❌ [TRANSFORM] Failed to transform Budget Allocation due to "
-            f"{e}."
+
+        traceback.print_exc()
+
+        print(
+            f"{str(e)}."
         )
+        
+        raise
