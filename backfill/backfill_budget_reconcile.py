@@ -6,6 +6,7 @@ sys.path.append(str(ROOT_FOLDER_LOCATION))
 
 import argparse
 from datetime import datetime
+import traceback
 
 from google.cloud import secretmanager
 from google.api_core.client_options import ClientOptions
@@ -151,11 +152,17 @@ def backfill():
 
     # Entrypoint
 if __name__ == "__main__":
-    
+
     try:
-    
+
         backfill()
-    
+
     except Exception:
-    
+
+        print(
+            "❌ [MAIN] Failed to execute Budget Reconciliation backfill due to..."
+        )
+
+        traceback.print_exc()
+
         sys.exit(1)
