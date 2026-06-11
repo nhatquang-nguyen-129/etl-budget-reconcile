@@ -165,7 +165,7 @@ def main():
         spreadsheet_id=spreadsheet_id
     )
 
-    # Entrypoint
+    # Entrypoint 
 if __name__ == "__main__":
 
     try:
